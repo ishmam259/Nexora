@@ -1,70 +1,86 @@
-# Spring Boot + React Native (Expo) Starter Project
+# Nexora Architecture & Topological Sorting
 
-This project contains a full-stack configuration combining a Spring Boot REST API backend with a React Native (Expo) mobile/web frontend.
+## 1. System Structure
 
-## Project Structure
-
+### React Native Frontend
 ```text
-├── backend/       # Spring Boot Maven application (Java 21)
-└── frontend/      # React Native Expo application (TypeScript)
+src
+├── assets
+├── components
+├── screens
+│   ├── Marketplace
+│   ├── Food
+│   ├── Laundry
+│   ├── Printing
+│   ├── Medical
+│   ├── Chat
+│   ├── LostFound
+│   ├── Profile
+├── navigation
+├── hooks
+├── services
+│   └── keycloak
+│       ├── auth.ts
+│       ├── token.ts
+│       └── config.ts
+├── api
+│   └── axiosInstance.ts
+├── redux
+├── context
+├── constants
+├── utils
+├── theme
+└── App.tsx
+```
+
+### Spring Boot Backend Microservices
+```text
+nexora-backend (backend)
+├── api-gateway          # JWT Validation, Routing, Rate Limiting, Request Filtering
+├── keycloak             # User Authentication, OIDC Provider, Role Management, Token Issuing
+│   └── Roles
+│       ├── STUDENT
+│       ├── ADMIN
+│       ├── MERCHANT
+│       ├── RESTAURANT_OWNER
+│       └── DELIVERY_AGENT
+├── marketplace-service  # Product, Category, Review, Order (DB: marketplace_db)
+├── food-service         # Restaurant, Menu, FoodOrder (DB: food_db)
+├── laundry-service      # LaundryOrder, Slot (DB: laundry_db)
+├── print-service        # PrintOrder (DB: printing_db)
+├── medical-service      # Medicine, Appointment (DB: medical_db)
+├── chat-service         # Conversation, Message (DB: chat_db)
+├── lost-found-service   # LostItem, FoundItem (DB: lost_found_db)
+├── notification-service # Dispatches push, SMS, email notifications (DB: notification_db)
+├── payment-service      # Handles checkouts and payment processing (DB: payment_db)
+├── ai-service           # AI History, Recommendations, User Preferences (DB: ai_db)
+├── common-library       # Security Utilities, DTOs, Exception Handling, Constants
+└── docker-compose.yml
 ```
 
 ---
 
-## Getting Started
+## 2. Microservice Dependency Analysis
 
-### 1. Prerequisite Checks
-Ensure you have the following installed on your machine:
-*   **Java JDK 17+** (JDK 24 detected on host)
-*   **Node.js LTS** (Node v24.12 detected on host)
-*   **NPM** or another package manager
-
----
-
-### 2. Running the Spring Boot Backend
-
-The backend is configured to run a REST API on port `8080` with pre-configured CORS to allow frontend connections.
-
-1. Navigate to the `backend` directory:
-   ```bash
-   cd backend
-   ```
-2. Run the application:
-   *   **Windows (PowerShell):**
-       ```powershell
-       .\mvnw.cmd spring-boot:run
-       ```
-   *   **macOS / Linux:**
-       ```bash
-       ./mvnw spring-boot:run
-       ```
-
-The backend API will be available at [http://localhost:8080/api/hello](http://localhost:8080/api/hello).
+*   **`common-library`**: Core compile-time dependency. Contains cross-cutting security utilities, exception mappers, shared constants, and data transfer objects. All microservices inherit this package.
+*   **`keycloak`**: Core identity service. Required by all business microservices and the `api-gateway` to perform user token issuance and role-based validations.
+*   **`payment-service`**: Standalone transaction utility. Queried or triggered by services requiring checkout flows (`marketplace`, `food`, `laundry`, `print`).
+*   **`notification-service`**: Standalone event dispatcher. Relied upon by business and chat services to push alerts to client devices.
+*   **`ai-service`**: Aggregator recommendation service. Serves recommendations to customer interfaces, building profile profiles off data streams.
+*   **Business Microservices**: Contain domain boundaries (`marketplace`, `food`, `laundry`, etc.) consuming foundational and utility services.
+*   **`api-gateway`**: Entry facade routing external client traffic to target microservices.
 
 ---
 
-### 3. Running the React Native Frontend
+## 3. Topological Sorting (Build & Deployment Order)
 
-The frontend is an Expo SDK 57 application configured with dynamic URL inputs so you can connect to local or physical backend servers.
+The topological sort sequence represents the order from least dependent (core services) to most dependent (gateway and aggregators):
 
-1. Navigate to the `frontend` directory:
-   ```bash
-   cd frontend
-   ```
-2. Start the development server:
-   ```bash
-   npm run start
-   ```
-3. Open the app:
-   *   **Web (Browser):** Press `w` in the terminal to run in the web browser.
-   *   **Android (Emulator/Device):** Press `a` or scan the QR code using the Expo Go app.
-   *   **iOS (Simulator/Device):** Press `i` or scan the QR code using the Expo Go app.
+$$\text{common-library} \rightarrow \text{keycloak} \rightarrow \text{payment-service} \rightarrow \text{notification-service} \rightarrow \text{ai-service} \rightarrow \text{[Business Services]} \rightarrow \text{api-gateway}$$
 
----
-
-## Connecting Frontend to Backend
-
-In the React Native app UI, configure the target backend URL:
-*   **iOS Simulator / Web browser:** Use `http://localhost:8080/api/hello`.
-*   **Android Emulator:** Use `http://10.0.2.2:8080/api/hello` (this routes directly to your computer's localhost).
-*   **Physical Mobile Devices:** Run `ipconfig` (Windows) or `ifconfig` (macOS/Linux) to find your local computer IP address (e.g. `192.168.1.123`) and set the endpoint to `http://<your-local-ip>:8080/api/hello`.
+### Linear Deployment Checklist
+1.  **`common-library`** (Must be built first for others to resolve symbols)
+2.  **`keycloak`** (Auth server must be up for resource validation)
+3.  **`payment-service`** / **`notification-service`** / **`ai-service`** (Utility layer)
+4.  **`marketplace-service`** / **`food-service`** / **`laundry-service`** / **`print-service`** / **`medical-service`** / **`chat-service`** / **`lost-found-service`** (Business layer)
+5.  **`api-gateway`** (Edge router)
