@@ -1,0 +1,80 @@
+{
+  "id": "nexora",
+  "realm": "nexora",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "STUDENT",
+        "description": "Student Role"
+      },
+      {
+        "name": "ADMIN",
+        "description": "Administrator Role"
+      },
+      {
+        "name": "MERCHANT",
+        "description": "Merchant Role"
+      },
+      {
+        "name": "RESTAURANT_OWNER",
+        "description": "Restaurant Owner Role"
+      },
+      {
+        "name": "DELIVERY_AGENT",
+        "description": "Delivery Agent Role"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "nexora-client",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "student_user",
+      "enabled": true,
+      "email": "student@nexora.com",
+      "firstName": "Student",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "username": "admin_user",
+      "enabled": true,
+      "email": "admin@nexora.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
+    }
+  ]
+}

@@ -23,9 +23,9 @@ export default function HomeScreen() {
   // Default URL changes based on platform for ease of local testing
   const getDefaultUrl = () => {
     if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:8080/api/hello'; // Android Emulator loopback to host
+      return 'http://10.0.2.2:8082/api/hello'; // Android Emulator loopback to host
     }
-    return 'http://localhost:8080/api/hello'; // Web / iOS Simulator
+    return 'http://localhost:8082/api/hello'; // Web / iOS Simulator
   };
 
   const [backendUrl, setBackendUrl] = useState(getDefaultUrl());
@@ -165,7 +165,7 @@ export default function HomeScreen() {
               ]}
               value={backendUrl}
               onChangeText={setBackendUrl}
-              placeholder="http://localhost:8080/api/hello"
+              placeholder="http://localhost:8082/api/hello"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -175,13 +175,13 @@ export default function HomeScreen() {
             <View style={styles.helperRow}>
               <TouchableOpacity 
                 style={[styles.helperBtn, { backgroundColor: theme.backgroundSelected }]}
-                onPress={() => setBackendUrl('http://localhost:8080/api/hello')}
+                onPress={() => setBackendUrl('http://localhost:8082/api/hello')}
               >
                 <ThemedText type="code" style={styles.helperText}>Web / iOS (localhost)</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.helperBtn, { backgroundColor: theme.backgroundSelected }]}
-                onPress={() => setBackendUrl('http://10.0.2.2:8080/api/hello')}
+                onPress={() => setBackendUrl('http://10.0.2.2:8082/api/hello')}
               >
                 <ThemedText type="code" style={styles.helperText}>Android (10.0.2.2)</ThemedText>
               </TouchableOpacity>
@@ -286,7 +286,7 @@ export default function HomeScreen() {
             <View style={styles.tipItem}>
               <ThemedText type="smallBold">2. Physical Device Connection</ThemedText>
               <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                Ensure your phone and computer are on the same Wi-Fi network, and use your computer's local network IP in the configuration URL (e.g., <ThemedText type="code">http://192.168.1.100:8080/api/hello</ThemedText>).
+                Ensure your phone and computer are on the same Wi-Fi network, and use your computer's local network IP in the configuration URL (e.g., <ThemedText type="code">http://192.168.1.100:8082/api/hello</ThemedText>).
               </ThemedText>
             </View>
           </ThemedView>
