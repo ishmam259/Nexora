@@ -1,4 +1,4 @@
-package com.nexora.marketplace;
+package com.nexora.food;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,7 +9,7 @@ import org.springframework.test.context.TestPropertySource;
         "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8081/realms/nexora",
         "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8081/realms/nexora/protocol/openid-connect/certs"
 })
-class MarketplaceApplicationTests {
+class FoodApplicationTests {
 
     @Test
     void contextLoads() {
