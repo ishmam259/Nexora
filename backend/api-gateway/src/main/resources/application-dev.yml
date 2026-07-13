@@ -1,0 +1,22 @@
+spring:
+  # ── Redis fallback for development (no Redis server required) ────────────────
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # Override rate limiter to use an in-memory key resolver when Redis unavailable.
+  # The gateway will still work; rate limiting will simply not be distributed.
+  cloud:
+    gateway:
+      redis:
+        # Gracefully disable Redis-backed rate limiter when Redis is absent.
+        # Spring Cloud Gateway falls back automatically if RedisRateLimiter
+        # cannot connect; requests will not be rate-limited in that case.
+        enabled: false
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    com.nexora.gateway: DEBUG
