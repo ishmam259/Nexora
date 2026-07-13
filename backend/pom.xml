@@ -23,6 +23,8 @@
 		<module>common-library</module>
 		<module>marketplace-service</module>
 		<module>payment-service</module>
+		<module>notification-service</module>
+		<module>ai-service</module>
 	</modules>
 
 	<dependencyManagement>
