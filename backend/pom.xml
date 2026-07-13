@@ -26,6 +26,10 @@
 		<module>notification-service</module>
 		<module>ai-service</module>
 		<module>chat-service</module>
+		<module>food-service</module>
+		<module>laundry-service</module>
+		<module>print-service</module>
+		<module>medical-service</module>
 	</modules>
 
 	<dependencyManagement>
