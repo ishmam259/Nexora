@@ -1,0 +1,717 @@
+{
+  "info": {
+    "name": "Nexora Marketplace Service",
+    "description": "Complete Postman collection for testing the Nexora marketplace-service running on http://localhost:8082.\n\n**Authentication**: All endpoints require a Bearer JWT token from Keycloak.\nSet the `token` collection variable with your access token before running.\n\nKeycloak token endpoint:\nPOST http://localhost:8081/realms/nexora/protocol/openid-connect/token\nBody (form-data): grant_type=password, client_id=nexora-client, username=<user>, password=<pass>",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8082",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "PASTE_YOUR_KEYCLOAK_ACCESS_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "review_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "0. Get Keycloak Token",
+      "item": [
+        {
+          "name": "Get Student Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('token', json.access_token);",
+                  "    console.log('Student token saved to collection variable');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "password" },
+                { "key": "client_id", "value": "nexora-client" },
+                { "key": "username", "value": "student_user" },
+                { "key": "password", "value": "password" }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8081/realms/nexora/protocol/openid-connect/token",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["realms", "nexora", "protocol", "openid-connect", "token"]
+            },
+            "description": "Fetches a Student role JWT access token from Keycloak. The test script automatically saves it to the `token` collection variable."
+          }
+        },
+        {
+          "name": "Get Admin Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('token', json.access_token);",
+                  "    console.log('Admin token saved to collection variable');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "password" },
+                { "key": "client_id", "value": "nexora-client" },
+                { "key": "username", "value": "admin_user" },
+                { "key": "password", "value": "password" }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8081/realms/nexora/protocol/openid-connect/token",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["realms", "nexora", "protocol", "openid-connect", "token"]
+            },
+            "description": "Fetches an Admin role JWT access token from Keycloak. The test script automatically saves it to the `token` collection variable."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "categories"]
+            },
+            "description": "Returns all categories. Requires any authenticated role."
+          }
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "categories", "{{category_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Category (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('category_id', json.id);",
+                  "    console.log('category_id set to: ' + json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Phones, laptops, accessories and other electronic devices\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "categories"]
+            },
+            "description": "Creates a new product category. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "Create Category - Books (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) {",
+                  "    console.log('Books category ID: ' + json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Books & Study Materials\",\n  \"description\": \"Textbooks, notebooks, notes, and study guides\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Category - Clothing (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Clothing & Accessories\",\n  \"description\": \"Clothes, shoes, bags, and fashion accessories\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Update Category (ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronics & Gadgets\",\n  \"description\": \"Updated: Phones, laptops, tablets, accessories and all gadgets\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "categories", "{{category_id}}"]
+            },
+            "description": "Updates an existing category. Requires ADMIN role."
+          }
+        },
+        {
+          "name": "Delete Category (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "categories", "{{category_id}}"]
+            },
+            "description": "Deletes a category. Requires ADMIN role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Products",
+      "item": [
+        {
+          "name": "Browse All Active Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products"]
+            },
+            "description": "Returns all products with ACTIVE status. Includes avg rating and review count."
+          }
+        },
+        {
+          "name": "Search Products by Keyword",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products?search=laptop",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products"],
+              "query": [{ "key": "search", "value": "laptop" }]
+            },
+            "description": "Full-text search on product title (case-insensitive)."
+          }
+        },
+        {
+          "name": "Filter Products by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products?categoryId={{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products"],
+              "query": [{ "key": "categoryId", "value": "{{category_id}}" }]
+            },
+            "description": "Filter active products by category ID."
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products", "{{product_id}}"]
+            },
+            "description": "Get full product details including avg rating and review count."
+          }
+        },
+        {
+          "name": "Get My Listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products/my",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products", "my"]
+            },
+            "description": "Returns all products listed by the authenticated user (seller view)."
+          }
+        },
+        {
+          "name": "Create Product Listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('product_id', json.id);",
+                  "    console.log('product_id set to: ' + json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Dell XPS 15 Laptop\",\n  \"description\": \"Barely used Dell XPS 15 with Intel Core i7, 16GB RAM, 512GB SSD. Perfect for engineering students.\",\n  \"price\": 55000.00,\n  \"stock\": 1,\n  \"condition\": \"LIKE_NEW\",\n  \"imageUrl\": \"https://example.com/images/dell-xps15.jpg\",\n  \"categoryId\": {{category_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products"]
+            },
+            "description": "Creates a new product listing. sellerId is automatically taken from your JWT token. Requires STUDENT or MERCHANT role."
+          }
+        },
+        {
+          "name": "Create Product - Textbook",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Engineering Mathematics by Kreyszig\",\n  \"description\": \"10th edition, good condition. Some highlights on pages 1-50. Great for advanced math courses.\",\n  \"price\": 800.00,\n  \"stock\": 1,\n  \"condition\": \"GOOD\",\n  \"categoryId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products"]
+            }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 50000.00,\n  \"description\": \"Updated: Slightly negotiable price. Dell XPS 15 with i7, 16GB RAM, 512GB SSD. Charger included.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products", "{{product_id}}"]
+            },
+            "description": "Partial update — only sends fields that need changing. Ownership enforced server-side."
+          }
+        },
+        {
+          "name": "Delete (Remove) Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products", "{{product_id}}"]
+            },
+            "description": "Soft-deletes the product (sets status to REMOVED). Owner or ADMIN only."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Orders",
+      "item": [
+        {
+          "name": "Place Order (Buy Product)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('order_id', json.id);",
+                  "    console.log('order_id set to: ' + json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{product_id}},\n  \"quantity\": 1,\n  \"buyerNote\": \"Please keep it safe, I'll pick it up from the CS department.\",\n  \"paymentReference\": \"TXN-ABC123XYZ\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "orders"]
+            },
+            "description": "Places an order as a buyer. buyerId is taken from JWT. Stock is decremented. Product auto-becomes SOLD when stock reaches 0. Cannot buy your own product."
+          }
+        },
+        {
+          "name": "Get My Purchases (Buyer View)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/orders/my-purchases",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "orders", "my-purchases"]
+            },
+            "description": "All orders where the authenticated user is the buyer."
+          }
+        },
+        {
+          "name": "Get My Sales (Seller View)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/orders/my-sales",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "orders", "my-sales"]
+            },
+            "description": "All orders where the authenticated user is the seller."
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "orders", "{{order_id}}"]
+            },
+            "description": "Visible to buyer, seller, or admin of that order only."
+          }
+        },
+        {
+          "name": "Confirm Order (Seller Action)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/orders/{{order_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "orders", "{{order_id}}", "status"]
+            },
+            "description": "Seller confirms they will fulfill the order. Only seller or admin can CONFIRM."
+          }
+        },
+        {
+          "name": "Complete Order (Seller Action)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/orders/{{order_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "orders", "{{order_id}}", "status"]
+            },
+            "description": "Marks the order as completed (handoff done). Only seller or admin."
+          }
+        },
+        {
+          "name": "Cancel Order (Buyer Action)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/orders/{{order_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "orders", "{{order_id}}", "status"]
+            },
+            "description": "Cancels a PENDING or CONFIRMED order. Stock is restored automatically. Only buyer or admin can cancel."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Reviews",
+      "item": [
+        {
+          "name": "Add Review for Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) {",
+                  "    pm.collectionVariables.set('review_id', json.id);",
+                  "    console.log('review_id set to: ' + json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{product_id}},\n  \"rating\": 5,\n  \"comment\": \"Excellent condition! Exactly as described. Seller was very responsive. Highly recommend!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "reviews"]
+            },
+            "description": "Submit a review. reviewerId from JWT. Cannot review own product. One review per (user, product)."
+          }
+        },
+        {
+          "name": "Add Review - 3 Stars",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{product_id}},\n  \"rating\": 3,\n  \"comment\": \"Decent product but price was a bit high for the condition.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "reviews"]
+            }
+          }
+        },
+        {
+          "name": "Get Reviews for Product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/reviews/product/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "reviews", "product", "{{product_id}}"]
+            },
+            "description": "Returns all reviews for a product, ordered newest first."
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/reviews/{{review_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "reviews", "{{review_id}}"]
+            },
+            "description": "Delete a review. Only the reviewer or an ADMIN can delete."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. H2 Database Console",
+      "item": [
+        {
+          "name": "H2 Console (browser only)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/h2-console",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["h2-console"]
+            },
+            "description": "Open this in a browser. Use:\n- JDBC URL: jdbc:h2:mem:marketplace_db\n- Username: sa\n- Password: password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Error Scenarios",
+      "item": [
+        {
+          "name": "404 - Product Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products/99999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products", "99999"]
+            },
+            "description": "Should return 404 with error body."
+          }
+        },
+        {
+          "name": "400 - Invalid Rating (>5)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{product_id}},\n  \"rating\": 10,\n  \"comment\": \"This should fail validation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "reviews"]
+            },
+            "description": "Should return 500 with error: Rating must be between 1 and 5."
+          }
+        },
+        {
+          "name": "403 - Create Category as Student (should fail)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Category\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "categories"]
+            },
+            "description": "If logged in as STUDENT, should return 403 Forbidden."
+          }
+        },
+        {
+          "name": "401 - No Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/products",
+              "host": ["{{base_url}}"],
+              "path": ["api", "marketplace", "products"]
+            },
+            "description": "Should return 401 Unauthorized — no Bearer token provided."
+          }
+        }
+      ]
+    }
+  ]
+}
