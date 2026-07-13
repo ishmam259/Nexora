@@ -30,6 +30,7 @@
 		<module>laundry-service</module>
 		<module>print-service</module>
 		<module>medical-service</module>
+		<module>lost-found-service</module>
 	</modules>
 
 	<dependencyManagement>
