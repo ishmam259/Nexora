@@ -26,7 +26,7 @@ public class AiQueryLog {
     @Column(nullable = false, length = 1000)
     private String query;
 
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = false, length = 5000)
     private String response;
 
     @Column(nullable = false)
