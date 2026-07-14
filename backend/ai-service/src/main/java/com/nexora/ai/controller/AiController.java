@@ -26,10 +26,25 @@ public class AiController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping("/chat")
+    @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN')")
+    public ResponseEntity<AiQueryResponseDto> chat(@RequestBody AiQueryRequestDto request) {
+        request.setQueryType("CHAT");
+        AiQueryResponseDto response = aiService.processQuery(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @GetMapping("/history/{userId}")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN')")
     public ResponseEntity<List<AiQueryResponseDto>> getHistory(@PathVariable String userId) {
         List<AiQueryResponseDto> history = aiService.getQueryHistory(userId);
         return ResponseEntity.ok(history);
+    }
+
+    @DeleteMapping("/history/{userId}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN')")
+    public ResponseEntity<Void> deleteHistory(@PathVariable String userId) {
+        aiService.deleteQueryHistory(userId);
+        return ResponseEntity.noContent().build();
     }
 }
