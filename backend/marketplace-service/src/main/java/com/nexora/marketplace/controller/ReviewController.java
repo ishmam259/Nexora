@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/marketplace/reviews")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+// // @CrossOrigin(origins = "*")
 public class ReviewController {
 
     private final ReviewService reviewService;

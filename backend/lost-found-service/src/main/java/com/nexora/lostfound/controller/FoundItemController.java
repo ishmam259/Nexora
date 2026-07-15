@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/lost-found/found-items")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+// // @CrossOrigin(origins = "*")
 public class FoundItemController {
 
     private final FoundItemService foundItemService;

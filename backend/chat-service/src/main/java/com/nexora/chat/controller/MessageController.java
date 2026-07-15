@@ -15,7 +15,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/conversations/{conversationId}/messages")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+// // @CrossOrigin(origins = "*")
 public class MessageController {
 
     private final MessageService messageService;
