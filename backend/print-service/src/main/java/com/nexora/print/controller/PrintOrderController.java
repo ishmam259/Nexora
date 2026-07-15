@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/print/orders")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+// // @CrossOrigin(origins = "*")
 public class PrintOrderController {
 
     private final PrintOrderService printOrderService;

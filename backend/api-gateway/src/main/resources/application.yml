@@ -22,6 +22,7 @@ spring:
       default-filters:
         # Preserve the original Host header
         - PreserveHostHeader
+        - DedupeResponseHeader=Access-Control-Allow-Origin, Access-Control-Allow-Credentials, RETAIN_FIRST
 
       # Downstream HTTP client timeouts
       httpclient:

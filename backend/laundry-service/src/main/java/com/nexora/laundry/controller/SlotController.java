@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/laundry/slots")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+// // @CrossOrigin(origins = "*")
 public class SlotController {
 
     private final SlotService slotService;

@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/marketplace/orders")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+// // @CrossOrigin(origins = "*")
 public class OrderController {
 
     private final OrderService orderService;

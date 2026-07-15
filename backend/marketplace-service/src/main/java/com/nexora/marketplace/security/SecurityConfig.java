@@ -53,7 +53,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        // source.registerCorsConfiguration("/**", configuration); // Handled by API Gateway
         return source;
     }
 }
