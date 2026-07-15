@@ -9,6 +9,7 @@ import com.nexora.payment.entity.PaymentMethodType;
 import com.nexora.payment.entity.PaymentStatus;
 import com.nexora.payment.entity.WalletTransaction;
 import com.nexora.payment.repository.PaymentRepository;
+import com.nexora.payment.publisher.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -41,6 +42,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final WalletService walletService;
+    private final NotificationPublisher notificationPublisher;
 
     // ─── Process payment ──────────────────────────────────────────────────────────
 
@@ -71,6 +73,14 @@ public class PaymentService {
 
             log.info("Wallet payment {} processed successfully for order {}",
                     transactionId, request.getOrderId());
+
+            notificationPublisher.sendNotification(
+                    payerId,
+                    "Payment Successful",
+                    String.format("Your payment of %s %s for order %s was successful. Transaction ID: %s.",
+                            saved.getCurrency(), saved.getAmount(), saved.getOrderId(), saved.getTransactionId())
+            );
+
             return toDto(saved);
 
         } else {
@@ -88,6 +98,14 @@ public class PaymentService {
 
             log.info("Payment {} created with PENDING status for method {}",
                     transactionId, request.getPaymentMethod());
+
+            notificationPublisher.sendNotification(
+                    payerId,
+                    "Payment Pending",
+                    String.format("Your payment request of %s %s for order %s is pending confirmation.",
+                            saved.getCurrency(), saved.getAmount(), saved.getOrderId())
+            );
+
             return toDto(saved);
         }
     }
@@ -110,6 +128,14 @@ public class PaymentService {
         payment.setStatus(PaymentStatus.SUCCESS);
         Payment saved = paymentRepository.save(payment);
         log.info("Payment {} confirmed by admin", paymentId);
+
+        notificationPublisher.sendNotification(
+                saved.getPayerId(),
+                "Payment Confirmed",
+                String.format("Your pending payment of %s %s for order %s has been confirmed. Transaction ID: %s.",
+                        saved.getCurrency(), saved.getAmount(), saved.getOrderId(), saved.getTransactionId())
+        );
+
         return toDto(saved);
     }
 
@@ -171,6 +197,14 @@ public class PaymentService {
         Payment saved = paymentRepository.save(payment);
         log.info("Payment {} refunded. Amount {} credited to wallet of user {}",
                 id, payment.getAmount(), payment.getPayerId());
+
+        notificationPublisher.sendNotification(
+                saved.getPayerId(),
+                "Payment Refunded",
+                String.format("Your payment of %s %s for order %s has been refunded to your wallet.",
+                        saved.getCurrency(), saved.getAmount(), saved.getOrderId())
+        );
+
         return toDto(saved);
     }
 
@@ -183,7 +217,16 @@ public class PaymentService {
             throw new NexoraException("Only PENDING payments can be marked as FAILED");
         }
         payment.setStatus(PaymentStatus.FAILED);
-        return toDto(paymentRepository.save(payment));
+        Payment saved = paymentRepository.save(payment);
+
+        notificationPublisher.sendNotification(
+                saved.getPayerId(),
+                "Payment Failed",
+                String.format("Your payment request of %s %s for order %s has failed.",
+                        saved.getCurrency(), saved.getAmount(), saved.getOrderId())
+        );
+
+        return toDto(saved);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────────
