@@ -45,26 +45,30 @@ public class RequestLoggingFilter implements GatewayFilter, Ordered {
         long startTime = Instant.now().toEpochMilli();
 
         return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> ctx.getAuthentication())
-                .defaultIfEmpty(null)
-                .flatMap(auth -> {
-                    ServerHttpRequest mutatedRequest = buildMutatedRequest(request, auth);
-                    ServerWebExchange mutatedExchange = exchange.mutate()
-                            .request(mutatedRequest)
-                            .build();
+                .map(ctx -> java.util.Optional.ofNullable(ctx.getAuthentication()))
+                .defaultIfEmpty(java.util.Optional.empty())
+                .flatMap(authOpt -> proceed(exchange, chain, request, startTime, authOpt.orElse(null)));
+    }
 
-                    String username = (auth != null) ? auth.getName() : "anonymous";
-                    log.info("[GATEWAY] {} {} | User: {}",
-                            request.getMethod(), request.getPath(), username);
+    private Mono<Void> proceed(ServerWebExchange exchange, GatewayFilterChain chain,
+                               ServerHttpRequest request, long startTime,
+                               org.springframework.security.core.Authentication auth) {
+        ServerHttpRequest mutatedRequest = buildMutatedRequest(request, auth);
+        ServerWebExchange mutatedExchange = exchange.mutate()
+                .request(mutatedRequest)
+                .build();
 
-                    return chain.filter(mutatedExchange)
-                            .doFinally(signalType -> {
-                                ServerHttpResponse response = mutatedExchange.getResponse();
-                                long duration = Instant.now().toEpochMilli() - startTime;
-                                log.info("[GATEWAY] {} {} → {} | {}ms",
-                                        request.getMethod(), request.getPath(),
-                                        response.getStatusCode(), duration);
-                            });
+        String username = (auth != null) ? auth.getName() : "anonymous";
+        log.info("[GATEWAY] {} {} | User: {}",
+                request.getMethod(), request.getPath(), username);
+
+        return chain.filter(mutatedExchange)
+                .doFinally(signalType -> {
+                    ServerHttpResponse response = mutatedExchange.getResponse();
+                    long duration = Instant.now().toEpochMilli() - startTime;
+                    log.info("[GATEWAY] {} {} → {} | {}ms",
+                            request.getMethod(), request.getPath(),
+                            response.getStatusCode(), duration);
                 });
     }
 
