@@ -3,10 +3,12 @@ import { Platform, DeviceEventEmitter } from 'react-native';
 import { getAccessToken, clearTokens } from '@/services/keycloak/token';
 import { refreshAccessToken } from '@/services/keycloak/auth';
 
-// The API gateway (Spring Cloud Gateway) fronts every microservice on a single
-// origin. Replace this with your computer's local IP when testing on a
-// physical device (same caveat as services/keycloak/config.ts).
 function getGatewayBaseUrl() {
+  const configured = process.env.EXPO_PUBLIC_GATEWAY_URL;
+  if (configured) {
+    return configured.replace(/\/$/, '');
+  }
+
   const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
   return `http://${host}:8080`;
 }
