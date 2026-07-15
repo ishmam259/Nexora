@@ -23,7 +23,7 @@ async function getItem(key: string): Promise<string | null> {
   if (isWeb) {
     try {
       return localStorage.getItem(key);
-    } catch (e) {
+    } catch {
       return null;
     }
   } else {
@@ -35,7 +35,9 @@ async function removeItem(key: string) {
   if (isWeb) {
     try {
       localStorage.removeItem(key);
-    } catch (e) {}
+    } catch {
+      // ignore
+    }
   } else {
     await SecureStore.deleteItemAsync(key);
   }

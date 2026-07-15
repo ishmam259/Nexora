@@ -139,7 +139,7 @@ public class GatewayRoutesConfig {
 
                 // ── Chat Service ─────────────────────────────────────────────────
                 .route("chat-service", r -> r
-                        .path("/api/chat/**")
+                        .path("/api/conversations/**")
                         .filters(f -> f
                                 .filter(requestLoggingFilter)
                                 .addRequestHeader("X-Gateway-Service", "chat-service"))
