@@ -1,21 +1,29 @@
 services:
-  postgres-keycloak:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Shared PostgreSQL for all microservices + Keycloak
+  # ─────────────────────────────────────────────────────────────────────────────
+  postgres:
     image: postgres:16
-    container_name: postgres-keycloak
+    container_name: nexora-postgres
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak_password
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: nexora_password
+      POSTGRES_DB: postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./infra/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      test: ["CMD-SHELL", "pg_isready -U nexora"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Keycloak (Identity & Access Management)
+  # ─────────────────────────────────────────────────────────────────────────────
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: keycloak
@@ -24,15 +32,15 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak_password
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_USERNAME: nexora
+      KC_DB_PASSWORD: nexora_password
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
     ports:
       - "8081:8080"
     depends_on:
-      postgres-keycloak:
+      postgres:
         condition: service_healthy
 
 volumes:
