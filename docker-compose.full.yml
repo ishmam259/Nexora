@@ -9,6 +9,9 @@ x-keycloak-env: &keycloak-env
 x-postgres-env: &postgres-env
   SPRING_DATASOURCE_USERNAME: nexora
   SPRING_DATASOURCE_PASSWORD: nexora_password
+  # 10+ services × default Hikari 10 = can exhaust Postgres max_connections (100)
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
+  SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
 
 x-rabbitmq-env: &rabbitmq-env
   RABBITMQ_HOST: rabbitmq
@@ -44,6 +47,9 @@ services:
     environment:
       <<: [*postgres-env, *keycloak-env]
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/marketplace_db
+      NEXORA_MARKETPLACE_UPLOAD_DIR: /var/nexora/marketplace-uploads
+    volumes:
+      - marketplace_uploads:/var/nexora/marketplace-uploads
     depends_on: *backend-depends
     restart: unless-stopped
 
@@ -240,3 +246,6 @@ services:
       api-gateway:
         condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  marketplace_uploads:

@@ -10,14 +10,14 @@ export interface ModuleDef {
   href: Href;
 }
 
-/** Each campus service gets its own accent color, used consistently everywhere it appears. */
+/** Campus services for the Apps springboard. AI lives in the bottom bar. */
 export const MODULES: ModuleDef[] = [
   {
     key: 'marketplace',
     label: 'Marketplace',
-    tagline: 'Buy & sell with classmates',
+    tagline: 'Bid on campus listings',
     icon: { ios: 'bag.fill', android: 'shopping_bag', web: 'shopping_bag' },
-    color: '#7C5CFC',
+    color: '#6366F1',
     href: '/marketplace',
   },
   {
@@ -25,7 +25,7 @@ export const MODULES: ModuleDef[] = [
     label: 'Food',
     tagline: 'Order from campus eateries',
     icon: { ios: 'fork.knife', android: 'restaurant', web: 'restaurant' },
-    color: '#FF8A3D',
+    color: '#F97316',
     href: '/food',
   },
   {
@@ -33,7 +33,7 @@ export const MODULES: ModuleDef[] = [
     label: 'Laundry',
     tagline: 'Book a wash slot',
     icon: { ios: 'washer.fill', android: 'local_laundry_service', web: 'local_laundry_service' },
-    color: '#2CB1BC',
+    color: '#14B8A6',
     href: '/laundry',
   },
   {
@@ -41,7 +41,7 @@ export const MODULES: ModuleDef[] = [
     label: 'Print',
     tagline: 'Send docs to the print desk',
     icon: { ios: 'printer.fill', android: 'print', web: 'print' },
-    color: '#4C7EFF',
+    color: '#3B82F6',
     href: '/print',
   },
   {
@@ -49,7 +49,7 @@ export const MODULES: ModuleDef[] = [
     label: 'Medical',
     tagline: 'Book appointments & meds',
     icon: { ios: 'cross.case.fill', android: 'medical_services', web: 'medical_services' },
-    color: '#FF5C7C',
+    color: '#F43F5E',
     href: '/medical',
   },
   {
@@ -57,11 +57,25 @@ export const MODULES: ModuleDef[] = [
     label: 'Lost & Found',
     tagline: 'Report or claim an item',
     icon: { ios: 'magnifyingglass', android: 'search', web: 'search' },
-    color: '#F5B700',
+    color: '#EAB308',
     href: '/lost-found',
   },
 ];
 
-export const AI_ASSISTANT_COLOR = '#A855F7';
-export const CHAT_COLOR = '#5B4CE6';
-export const WALLET_COLOR = '#22C55E';
+export const AI_ASSISTANT_COLOR = '#8B5CF6';
+export const CHAT_COLOR = '#0F766E';
+export const WALLET_COLOR = '#10B981';
+export const NOTIFICATIONS_COLOR = '#64748B';
+
+/** Springboard only — destinations not already in the tab bar. */
+export const SPRINGBOARD_ITEMS: ModuleDef[] = [
+  ...MODULES,
+  {
+    key: 'notifications',
+    label: 'Alerts',
+    tagline: 'Campus notifications',
+    icon: { ios: 'bell.fill', android: 'notifications', web: 'notifications' },
+    color: NOTIFICATIONS_COLOR,
+    href: '/notifications',
+  },
+];

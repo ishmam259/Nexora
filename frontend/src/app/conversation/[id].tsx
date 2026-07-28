@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ErrorState, LoadingView } from '@/components/ui/feedback-states';
 import { listContainerStyle } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useAsync } from '@/hooks/use-async';
 import { useTheme } from '@/hooks/use-theme';
@@ -76,17 +76,25 @@ export default function ConversationScreen() {
           const mine = item.senderId === user?.username;
           return (
             <View style={[styles.bubbleRow, mine && styles.bubbleRowMine]}>
-              <View style={[styles.bubble, { backgroundColor: mine ? theme.primary : theme.backgroundElement }]}>
-                <ThemedText style={{ color: mine ? theme.onPrimary : theme.text }}>{item.content}</ThemedText>
+              <View
+                style={[
+                  styles.bubble,
+                  mine ? styles.bubbleMine : styles.bubbleTheirs,
+                  { backgroundColor: mine ? theme.primary : theme.backgroundElement },
+                ]}
+              >
+                <ThemedText type="small" style={{ color: mine ? theme.onPrimary : theme.text }}>
+                  {item.content}
+                </ThemedText>
               </View>
-              <ThemedText type="small" themeColor="textSecondary" style={mine ? styles.timeMine : undefined}>
+              <ThemedText type="caption" themeColor="textTertiary" style={mine ? styles.timeMine : undefined}>
                 {formatDateTime(item.sentAt)}
               </ThemedText>
             </View>
           );
         }}
       />
-      <View style={[styles.composer, listContainerStyle, { borderTopColor: theme.border }]}>
+      <View style={[styles.composer, listContainerStyle, { borderTopColor: theme.borderSubtle, backgroundColor: theme.background }]}>
         <View style={{ flex: 1 }}>
           <TextField value={draft} onChangeText={setDraft} placeholder="Message…" multiline onSubmitEditing={send} />
         </View>
@@ -99,9 +107,25 @@ export default function ConversationScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   list: { padding: Spacing.four, gap: Spacing.two, flexGrow: 1 },
-  bubbleRow: { maxWidth: '80%', gap: 2 },
+  bubbleRow: { maxWidth: '82%', gap: 4 },
   bubbleRowMine: { alignSelf: 'flex-end', alignItems: 'flex-end' },
-  bubble: { borderRadius: Spacing.three, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
+  bubble: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    maxWidth: '100%',
+  },
+  bubbleMine: {
+    borderTopRightRadius: Radius.sm,
+    borderTopLeftRadius: Radius.lg,
+    borderBottomLeftRadius: Radius.lg,
+    borderBottomRightRadius: Radius.lg,
+  },
+  bubbleTheirs: {
+    borderTopLeftRadius: Radius.sm,
+    borderTopRightRadius: Radius.lg,
+    borderBottomLeftRadius: Radius.lg,
+    borderBottomRightRadius: Radius.lg,
+  },
   timeMine: { textAlign: 'right' },
   composer: {
     flexDirection: 'row',

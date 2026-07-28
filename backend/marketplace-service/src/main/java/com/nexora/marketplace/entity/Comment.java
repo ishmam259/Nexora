@@ -9,13 +9,14 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"product_id", "reviewer_id"}))
+@Table(name = "comments", indexes = {
+        @Index(name = "idx_comments_product", columnList = "product_id")
+})
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Review {
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,16 +25,11 @@ public class Review {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    // Keycloak user ID of the reviewer
-    @Column(name = "reviewer_id", nullable = false)
-    private String reviewerId;
+    @Column(name = "author_id", nullable = false)
+    private String authorId;
 
-    // 1–5 star rating
-    @Column(nullable = false)
-    private Integer rating;
-
-    @Column(length = 1000)
-    private String comment;
+    @Column(nullable = false, length = 2000)
+    private String content;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

@@ -3,6 +3,7 @@ package com.nexora.gateway.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
@@ -51,6 +52,8 @@ public class SecurityConfig {
             .authorizeExchange(exchanges -> exchanges
                 // Actuator health and info endpoints are public
                 .pathMatchers("/actuator/health", "/actuator/info").permitAll()
+                // Marketplace listing photos (Image components cannot attach JWT)
+                .pathMatchers(HttpMethod.GET, "/api/marketplace/uploads/**").permitAll()
                 // All other requests require a valid JWT
                 .anyExchange().authenticated()
             )

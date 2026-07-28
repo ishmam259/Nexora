@@ -2,6 +2,10 @@ spring:
   application:
     name: api-gateway
 
+  codec:
+    # Allow marketplace photo uploads through the gateway
+    max-in-memory-size: 10MB
+
   # ── Security / OAuth2 ─────────────────────────────────────────────────────
   security:
     oauth2:

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export function SectionHeader({
@@ -13,14 +14,20 @@ export function SectionHeader({
   onAction?: () => void;
 }) {
   const theme = useTheme();
+
   return (
-    <View style={styles.row}>
-      <ThemedText type="subtitle" style={styles.title}>
-        {title}
-      </ThemedText>
+    <View style={styles.row} accessibilityRole="header">
+      <ThemedText type="subtitle">{title}</ThemedText>
       {actionLabel && onAction && (
-        <Pressable onPress={onAction} hitSlop={8}>
-          <ThemedText style={{ color: theme.primary, fontWeight: '600' }}>{actionLabel}</ThemedText>
+        <Pressable
+          onPress={onAction}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+        >
+          <ThemedText type="linkPrimary" style={{ color: theme.primary }}>
+            {actionLabel}
+          </ThemedText>
         </Pressable>
       )}
     </View>
@@ -28,6 +35,10 @@ export function SectionHeader({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: 20 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.one,
+  },
 });

@@ -11,11 +11,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReviewResponseDto {
+public class CommentResponseDto {
     private Long id;
     private Long productId;
-    private String reviewerId;
-    private Integer rating;
-    private String comment;
+    private String authorId;
+    private String content;
     private LocalDateTime createdAt;
 }

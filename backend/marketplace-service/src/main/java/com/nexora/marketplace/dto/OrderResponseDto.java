@@ -19,11 +19,10 @@ public class OrderResponseDto {
     private String productTitle;
     private String buyerId;
     private String sellerId;
+    private Long winningBidId;
     private BigDecimal amount;
-    private Integer quantity;
     private OrderStatus status;
     private String paymentReference;
-    private String buyerNote;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

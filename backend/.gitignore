@@ -35,3 +35,5 @@ build/
 ### Local Secrets and Configuration ###
 **/*-local.properties
 **/*-local.yml
+uploads/
+**/uploads/

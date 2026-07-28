@@ -105,16 +105,41 @@ public class GroqClient {
      * or when the API call fails. This prevents 500 errors in development.
      */
     private String buildFallbackResponse(String userQuery) {
-        return "Hello! I'm the Nexora Campus Assistant. I received your message: \"" + userQuery + "\"\n\n" +
-                "Currently, the AI service is running in demo mode (no external AI key configured). " +
-                "In production, I can help you with:\n" +
-                "• 🛍️ Marketplace — browse and list products\n" +
-                "• 🍜 Food — order from campus restaurants\n" +
-                "• 👕 Laundry — book laundry slots\n" +
-                "• 🖨️ Printing — submit print jobs\n" +
-                "• 💊 Medical — find medicines and book appointments\n" +
-                "• 🔍 Lost & Found — report or search for items\n" +
-                "• 💬 Chat — message other users\n\n" +
-                "To enable full AI responses, configure the GROQ_API_KEY environment variable.";
+        String lower = userQuery == null ? "" : userQuery.toLowerCase();
+        if (lower.contains("food") || lower.contains("restaurant") || lower.contains("eat")) {
+            return "You can order from campus restaurants here: [Open Food](/food)\n\n"
+                    + "To track past orders: [Food orders](/food/orders)";
+        }
+        if (lower.contains("laundry") || lower.contains("wash")) {
+            return "Book a laundry slot here: [Laundry](/laundry)";
+        }
+        if (lower.contains("print")) {
+            return "Submit a print job here: [Print](/print)";
+        }
+        if (lower.contains("wallet") || lower.contains("top up") || lower.contains("topup") || lower.contains("balance")) {
+            return "Check your balance or top up here: [Wallet](/wallet)";
+        }
+        if (lower.contains("sell") || lower.contains("marketplace") || lower.contains("bid") || lower.contains("auction")) {
+            return "Browse campus auctions: [Marketplace](/marketplace)\n\n"
+                    + "To list something: [List for auction](/marketplace/new)\n\n"
+                    + "Won bids / sales: [Auction activity](/marketplace/orders)";
+        }
+        if (lower.contains("lost") || lower.contains("found")) {
+            return "Open Lost & Found: [Lost & Found](/lost-found)\n\n"
+                    + "To report an item: [Report item](/lost-found/new)";
+        }
+        if (lower.contains("medical") || lower.contains("doctor") || lower.contains("appointment") || lower.contains("medicine")) {
+            return "Medical services: [Medical](/medical)\n\n"
+                    + "Appointments: [Book appointment](/medical/appointments)";
+        }
+        if (lower.contains("chat") || lower.contains("message")) {
+            return "Open your conversations: [Chat](/chat)";
+        }
+
+        return "I can help you get around Nexora. Try asking where to order food, book laundry, "
+                + "top up your wallet, or sell something.\n\n"
+                + "Quick links:\n"
+                + "[Apps home](/) · [Food](/food) · [Marketplace](/marketplace) · [Wallet](/wallet)\n\n"
+                + "(Full AI answers need GROQ_API_KEY configured on the ai-service.)";
     }
 }

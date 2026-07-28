@@ -12,7 +12,6 @@ type ScreenProps = {
   refreshing?: boolean;
   onRefresh?: () => void;
   padded?: boolean;
-  /** Reserve space for the bottom tab bar (only needed for screens inside the tab navigator). */
   tabInset?: boolean;
 };
 
@@ -24,9 +23,10 @@ export function Screen({ children, scroll = true, refreshing, onRefresh, padded 
       contentContainerStyle={[
         styles.content,
         padded && styles.padded,
-        tabInset && { paddingBottom: BottomTabInset + Spacing.five },
+        tabInset && { paddingBottom: BottomTabInset + Spacing.six },
       ]}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
       refreshControl={
         onRefresh ? <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={theme.primary} /> : undefined
       }
@@ -53,18 +53,16 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, width: '100%', maxWidth: MaxContentWidth },
   flex: { flex: 1 },
   content: { flexGrow: 1 },
-  padded: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, gap: Spacing.three },
+  padded: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, gap: Spacing.four },
 });
 
-/** For FlatList-based screens: pass as `style` to center content on wide/web viewports. */
 export const listContainerStyle = { width: '100%' as const, maxWidth: MaxContentWidth, alignSelf: 'center' as const };
 
-/** For FlatList-based screens: pass as `contentContainerStyle`. */
 export function listContentStyle(tabInset = false) {
   return {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
-    paddingBottom: tabInset ? BottomTabInset + Spacing.five : Spacing.five,
+    paddingBottom: tabInset ? BottomTabInset + Spacing.six : Spacing.six,
     gap: Spacing.two,
     flexGrow: 1,
   };

@@ -3,7 +3,7 @@ import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export interface SelectOption<T extends string = string> {
@@ -29,17 +29,19 @@ export function SelectField<T extends string>({ label, value, options, onChange,
       {label && <ThemedText type="smallBold">{label}</ThemedText>}
       <Pressable
         onPress={() => setOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel={label ? `${label}: ${selected?.label ?? placeholder}` : selected?.label ?? placeholder}
         style={[styles.input, { borderColor: theme.border, backgroundColor: theme.backgroundElement }]}
       >
-        <ThemedText style={{ color: selected ? theme.text : theme.textSecondary }}>
+        <ThemedText style={{ color: selected ? theme.text : theme.textTertiary }}>
           {selected ? selected.label : placeholder}
         </ThemedText>
-        <SymbolView name={{ ios: 'chevron.down', android: 'expand_more', web: 'expand_more' }} tintColor={theme.textSecondary} size={16} />
+        <SymbolView name={{ ios: 'chevron.down', android: 'expand_more', web: 'expand_more' }} tintColor={theme.textTertiary} size={16} />
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <View style={[styles.sheet, { backgroundColor: theme.background }]}>
+          <View style={[styles.sheet, { backgroundColor: theme.backgroundElement }]}>
             {label && (
               <ThemedText type="subtitle" style={styles.sheetTitle}>
                 {label}
@@ -54,9 +56,13 @@ export function SelectField<T extends string>({ label, value, options, onChange,
                     onChange(item.value);
                     setOpen(false);
                   }}
-                  style={[styles.option, item.value === value && { backgroundColor: theme.backgroundSelected }]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: item.value === value }}
+                  style={[styles.option, item.value === value && { backgroundColor: theme.primaryMuted }]}
                 >
-                  <ThemedText>{item.label}</ThemedText>
+                  <ThemedText type="smallBold" style={item.value === value ? { color: theme.primary } : undefined}>
+                    {item.label}
+                  </ThemedText>
                   {item.value === value && (
                     <SymbolView name={{ ios: 'checkmark', android: 'check', web: 'check' }} tintColor={theme.primary} size={18} />
                   )}
@@ -73,28 +79,29 @@ export function SelectField<T extends string>({ label, value, options, onChange,
 const styles = StyleSheet.create({
   wrapper: { gap: Spacing.one },
   input: {
-    height: 48,
+    minHeight: MinTouchTarget,
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   sheet: {
-    borderTopLeftRadius: Spacing.four,
-    borderTopRightRadius: Spacing.four,
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
     padding: Spacing.four,
     maxHeight: '70%',
   },
-  sheetTitle: { fontSize: 18, marginBottom: Spacing.two },
+  sheetTitle: { marginBottom: Spacing.two },
   option: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.one,
-    borderRadius: Spacing.one,
+    paddingHorizontal: Spacing.two,
+    borderRadius: Radius.md,
+    minHeight: MinTouchTarget,
   },
 });

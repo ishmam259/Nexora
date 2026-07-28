@@ -4,13 +4,15 @@ import { Alert, FlatList, Modal, Pressable, StyleSheet, View } from 'react-nativ
 import { SymbolView } from 'expo-symbols';
 
 import { ThemedText } from '@/components/themed-text';
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/feedback-states';
 import { Screen } from '@/components/ui/screen';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { TextField } from '@/components/ui/text-field';
 import { CHAT_COLOR } from '@/constants/modules';
-import { Spacing } from '@/constants/theme';
+import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useAsync } from '@/hooks/use-async';
 import { useTheme } from '@/hooks/use-theme';
@@ -19,6 +21,7 @@ import { formatDateTime } from '@/utils/format';
 
 export default function ChatScreen() {
   const { user } = useAuth();
+  const theme = useTheme();
   const [newChatOpen, setNewChatOpen] = useState(false);
 
   const { data, loading, error, refresh, refreshing } = useAsync(
@@ -26,17 +29,35 @@ export default function ChatScreen() {
     [user?.username]
   );
 
-  if (!user || loading) return <LoadingView />;
+  if (!user || loading) return <LoadingView message="Loading conversations…" />;
   if (error) return <ErrorState message={error} onRetry={refresh} />;
 
   return (
     <>
       <Screen scroll={false} tabInset padded={false}>
-        <View style={styles.header}>
-          <ThemedText type="title">Chat</ThemedText>
-          <Pressable onPress={() => setNewChatOpen(true)} hitSlop={8}>
-            <SymbolView name={{ ios: 'square.and.pencil', android: 'edit_square', web: 'edit_square' }} tintColor={CHAT_COLOR} size={22} />
-          </Pressable>
+        <View style={styles.headerWrap}>
+          <ScreenHeader
+            title="Messages"
+            subtitle="Chat with classmates and sellers"
+            action={
+              <Pressable
+                onPress={() => setNewChatOpen(true)}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Start new conversation"
+                style={({ pressed }) => [
+                  styles.composeButton,
+                  { backgroundColor: theme.primaryMuted, opacity: pressed ? 0.85 : 1 },
+                ]}
+              >
+                <SymbolView
+                  name={{ ios: 'square.and.pencil', android: 'edit_square', web: 'edit_square' }}
+                  tintColor={CHAT_COLOR}
+                  size={20}
+                />
+              </Pressable>
+            }
+          />
         </View>
         <FlatList
           data={data ?? []}
@@ -54,19 +75,24 @@ export default function ChatScreen() {
           renderItem={({ item }) => {
             const other = item.participantOne === user?.username ? item.participantTwo : item.participantOne;
             return (
-              <Pressable onPress={() => router.push(`/conversation/${item.id}`)}>
+              <Pressable
+                onPress={() => router.push(`/conversation/${item.id}`)}
+                accessibilityRole="button"
+                accessibilityLabel={`Conversation with ${other}`}
+                style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+              >
                 <Card style={styles.row}>
-                  <View style={[styles.avatar, { backgroundColor: CHAT_COLOR }]}>
-                    <ThemedText style={styles.avatarText}>{other.charAt(0).toUpperCase()}</ThemedText>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <ThemedText type="smallBold">{other}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                  <Avatar label={other} color={CHAT_COLOR} />
+                  <View style={styles.rowText}>
+                    <ThemedText type="smallBold" numberOfLines={1}>
+                      {other}
+                    </ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
                       {item.lastMessage?.content ?? 'No messages yet'}
                     </ThemedText>
                   </View>
                   {item.lastMessage && (
-                    <ThemedText type="small" themeColor="textSecondary">
+                    <ThemedText type="caption" themeColor="textTertiary">
                       {formatDateTime(item.lastMessage.sentAt)}
                     </ThemedText>
                   )}
@@ -107,8 +133,16 @@ function NewChatModal({ visible, onClose }: { visible: boolean; onClose: () => v
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={[styles.sheet, { backgroundColor: theme.background }]} onPress={(e) => e.stopPropagation()}>
-          <ThemedText type="subtitle">New conversation</ThemedText>
-          <TextField label="Username" value={username} onChangeText={setUsername} placeholder="e.g. jrahman" autoCapitalize="none" />
+          <View style={[styles.sheetHandle, { backgroundColor: theme.border }]} />
+          <ThemedText type="headline">New conversation</ThemedText>
+          <TextField
+            label="Username"
+            value={username}
+            onChangeText={setUsername}
+            placeholder="e.g. student_user"
+            autoCapitalize="none"
+            hint="Enter their Nexora username exactly as shown on their profile."
+          />
           <Button label="Start chat" onPress={start} loading={submitting} />
           <Button label="Cancel" variant="ghost" onPress={onClose} />
         </Pressable>
@@ -118,18 +152,18 @@ function NewChatModal({ visible, onClose }: { visible: boolean; onClose: () => v
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  headerWrap: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, paddingBottom: Spacing.two },
+  composeButton: {
+    width: MinTouchTarget,
+    height: MinTouchTarget,
+    borderRadius: Radius.md,
     alignItems: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.two,
+    justifyContent: 'center',
   },
-  list: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.five, gap: Spacing.two },
-  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#fff', fontWeight: '700' },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  sheet: { borderTopLeftRadius: Spacing.four, borderTopRightRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
+  list: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.six, gap: Spacing.two },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  rowText: { flex: 1, gap: 2 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet: { borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl, padding: Spacing.four, gap: Spacing.three },
+  sheetHandle: { width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: Spacing.one },
 });

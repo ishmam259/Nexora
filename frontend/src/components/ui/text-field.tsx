@@ -1,34 +1,48 @@
 import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { MinTouchTarget, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type TextFieldProps = TextInputProps & {
   label?: string;
   error?: string;
+  hint?: string;
 };
 
-export function TextField({ label, error, style, ...rest }: TextFieldProps) {
+export function TextField({ label, error, hint, style, accessibilityLabel, ...rest }: TextFieldProps) {
   const theme = useTheme();
 
   return (
     <View style={styles.wrapper}>
-      {label && <ThemedText type="smallBold">{label}</ThemedText>}
+      {label && (
+        <ThemedText type="smallBold" accessibilityRole="text">
+          {label}
+        </ThemedText>
+      )}
       <TextInput
-        placeholderTextColor={theme.textSecondary}
+        accessibilityLabel={accessibilityLabel ?? label ?? rest.placeholder}
+        placeholderTextColor={theme.textTertiary}
         style={[
           styles.input,
-          { color: theme.text, borderColor: error ? theme.danger : theme.border, backgroundColor: theme.backgroundElement },
+          {
+            color: theme.text,
+            borderColor: error ? theme.danger : theme.border,
+            backgroundColor: theme.backgroundElement,
+          },
           style,
         ]}
         {...rest}
       />
-      {error && (
-        <ThemedText type="small" themeColor="danger">
+      {error ? (
+        <ThemedText type="caption" themeColor="danger" accessibilityRole="alert">
           {error}
         </ThemedText>
-      )}
+      ) : hint ? (
+        <ThemedText type="caption" themeColor="textTertiary">
+          {hint}
+        </ThemedText>
+      ) : null}
     </View>
   );
 }
@@ -36,10 +50,10 @@ export function TextField({ label, error, style, ...rest }: TextFieldProps) {
 const styles = StyleSheet.create({
   wrapper: { gap: Spacing.one },
   input: {
-    height: 48,
+    minHeight: MinTouchTarget,
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
-    fontSize: 15,
+    fontSize: 16,
   },
 });
