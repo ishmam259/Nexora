@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: cimg/android:2024.01-node
     working_directory: ~/project
-    resource_class: large
+    resource_class: xlarge
     steps:
       - checkout
       - restore_cache:
@@ -24,6 +24,14 @@ jobs:
       - run:
           name: Generate native Android project
           command: cd frontend && npx expo prebuild --platform android --no-install
+      - run:
+          name: Tune Gradle/Kotlin memory for CI container
+          command: |
+            cat >> frontend/android/gradle.properties <<'EOF'
+            org.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=1g
+            org.gradle.workers.max=4
+            kotlin.daemon.jvm.options=-Xmx4g
+            EOF
       - restore_cache:
           keys:
             - gradle-caches-{{ checksum "frontend/android/build.gradle" }}
