@@ -27,11 +27,11 @@ jobs:
       - run:
           name: Tune Gradle/Kotlin memory for CI container
           command: |
-            cat >> frontend/android/gradle.properties <<'EOF'
-            org.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=1g
-            org.gradle.workers.max=4
-            kotlin.daemon.jvm.options=-Xmx4g
-            EOF
+            {
+              echo 'org.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=1g'
+              echo 'org.gradle.workers.max=4'
+              echo 'kotlin.daemon.jvm.options=-Xmx4g'
+            } >> frontend/android/gradle.properties
       - restore_cache:
           keys:
             - gradle-caches-{{ checksum "frontend/android/build.gradle" }}
