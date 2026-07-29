@@ -44,7 +44,7 @@ export function RootNavigator() {
       <Stack.Screen name="conversation" />
       <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
       <Stack.Screen name="payments" options={{ headerShown: true, title: 'Payment History' }} />
-      <Stack.Screen name="ai-assistant" options={{ headerShown: true, title: 'Nexora Assistant' }} />
+      <Stack.Screen name="ai-assistant" />
     </Stack>
   );
 }

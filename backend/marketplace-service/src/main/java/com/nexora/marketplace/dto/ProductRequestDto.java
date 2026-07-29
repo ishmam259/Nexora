@@ -15,8 +15,9 @@ import java.math.BigDecimal;
 public class ProductRequestDto {
     private String title;
     private String description;
-    private BigDecimal price;
-    private Integer stock;
+    private BigDecimal startingBid;
+    /** Auction length in hours (default 72). */
+    private Integer durationHours;
     private ProductCondition condition;
     private String imageUrl;
     private Long categoryId;

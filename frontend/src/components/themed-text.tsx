@@ -4,7 +4,7 @@ import { Fonts, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedTextProps = TextProps & {
-  type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
+  type?: 'default' | 'title' | 'headline' | 'subtitle' | 'small' | 'smallBold' | 'caption' | 'link' | 'linkPrimary' | 'code';
   themeColor?: ThemeColor;
 };
 
@@ -13,15 +13,18 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 
   return (
     <Text
+      accessibilityRole={type === 'link' || type === 'linkPrimary' ? 'link' : undefined}
       style={[
         { color: theme[themeColor ?? 'text'] },
         type === 'default' && styles.default,
         type === 'title' && styles.title,
+        type === 'headline' && styles.headline,
+        type === 'subtitle' && styles.subtitle,
         type === 'small' && styles.small,
         type === 'smallBold' && styles.smallBold,
-        type === 'subtitle' && styles.subtitle,
+        type === 'caption' && styles.caption,
         type === 'link' && styles.link,
-        type === 'linkPrimary' && styles.linkPrimary,
+        type === 'linkPrimary' && [styles.linkPrimary, { color: theme.primary }],
         type === 'code' && styles.code,
         style,
       ]}
@@ -31,45 +34,59 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 }
 
 const styles = StyleSheet.create({
-  small: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 500,
+  title: {
+    fontFamily: Fonts.rounded,
+    fontSize: 28,
+    fontWeight: '700',
+    lineHeight: 34,
+    letterSpacing: -0.3,
   },
-  smallBold: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 700,
+  headline: {
+    fontFamily: Fonts.rounded,
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 28,
+    letterSpacing: -0.2,
+  },
+  subtitle: {
+    fontSize: 17,
+    lineHeight: 24,
+    fontWeight: '600',
   },
   default: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: 500,
+    fontWeight: '400',
   },
-  title: {
-    fontFamily: Fonts.rounded,
-    fontSize: 40,
-    fontWeight: 700,
-    lineHeight: 46,
+  small: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '400',
   },
-  subtitle: {
-    fontFamily: Fonts.rounded,
-    fontSize: 24,
-    lineHeight: 30,
-    fontWeight: 700,
+  smallBold: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+  },
+  caption: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500',
   },
   link: {
-    lineHeight: 30,
     fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
   },
   linkPrimary: {
-    lineHeight: 30,
     fontSize: 14,
-    color: '#3c87f7',
+    lineHeight: 20,
+    fontWeight: '600',
   },
   code: {
     fontFamily: Fonts.mono,
-    fontWeight: Platform.select({ android: 700 }) ?? 500,
+    fontWeight: Platform.select({ android: '700' }) ?? '500',
     fontSize: 12,
+    lineHeight: 16,
   },
 });

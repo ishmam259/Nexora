@@ -1,7 +1,7 @@
 package com.nexora.marketplace.controller;
 
-import com.nexora.marketplace.dto.OrderRequestDto;
 import com.nexora.marketplace.dto.OrderResponseDto;
+import com.nexora.marketplace.dto.PayOrderRequestDto;
 import com.nexora.marketplace.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,68 +12,68 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/marketplace/orders")
 @RequiredArgsConstructor
-// // @CrossOrigin(origins = "*")
 public class OrderController {
 
     private final OrderService orderService;
 
-    /** Place an order — buyer purchases a product */
-    @PostMapping
+    /** Seller accepts the highest bid on a listing. */
+    @PostMapping("/accept/{productId}")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT')")
-    public ResponseEntity<OrderResponseDto> placeOrder(
-            @RequestBody OrderRequestDto request,
+    public ResponseEntity<OrderResponseDto> acceptHighestBid(
+            @PathVariable Long productId,
             Authentication authentication) {
-        String buyerId = authentication.getName();
-        OrderResponseDto response = orderService.placeOrder(request, buyerId);
+        OrderResponseDto response = orderService.acceptHighestBid(productId, authentication.getName());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    /** Get all orders I placed as a buyer */
+    /** Winning bidder pays for an accepted bid. */
+    @PostMapping("/{id}/pay")
+    @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT')")
+    public ResponseEntity<OrderResponseDto> payOrder(
+            @PathVariable Long id,
+            @RequestBody PayOrderRequestDto request,
+            Authentication authentication) {
+        return ResponseEntity.ok(orderService.payOrder(id, request, authentication.getName()));
+    }
+
+    @PostMapping("/{id}/complete")
+    @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN')")
+    public ResponseEntity<OrderResponseDto> completeOrder(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(orderService.completeOrder(id, authentication.getName(), hasRole(authentication, "ROLE_ADMIN")));
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN')")
+    public ResponseEntity<OrderResponseDto> cancelOrder(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(orderService.cancelOrder(id, authentication.getName(), hasRole(authentication, "ROLE_ADMIN")));
+    }
+
     @GetMapping("/my-purchases")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN')")
     public ResponseEntity<List<OrderResponseDto>> getMyPurchases(Authentication authentication) {
-        String buyerId = authentication.getName();
-        return ResponseEntity.ok(orderService.getMyPurchases(buyerId));
+        return ResponseEntity.ok(orderService.getMyPurchases(authentication.getName()));
     }
 
-    /** Get all orders I received as a seller */
     @GetMapping("/my-sales")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN')")
     public ResponseEntity<List<OrderResponseDto>> getMySales(Authentication authentication) {
-        String sellerId = authentication.getName();
-        return ResponseEntity.ok(orderService.getMySales(sellerId));
+        return ResponseEntity.ok(orderService.getMySales(authentication.getName()));
     }
 
-    /** Get a specific order by ID (visible to buyer, seller, or admin) */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderResponseDto> getOrderById(
             @PathVariable Long id,
             Authentication authentication) {
-        String requesterId = authentication.getName();
-        boolean isAdmin = hasRole(authentication, "ROLE_ADMIN");
-        return ResponseEntity.ok(orderService.getOrderById(id, requesterId, isAdmin));
-    }
-
-    /**
-     * Update order status.
-     * Request body: {"status": "CONFIRMED"} — one of PENDING, CONFIRMED, COMPLETED, CANCELLED
-     */
-    @PutMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN')")
-    public ResponseEntity<OrderResponseDto> updateOrderStatus(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> body,
-            Authentication authentication) {
-        String requesterId = authentication.getName();
-        boolean isAdmin = hasRole(authentication, "ROLE_ADMIN");
-        String newStatus = body.get("status");
-        return ResponseEntity.ok(orderService.updateOrderStatus(id, newStatus, requesterId, isAdmin));
+        return ResponseEntity.ok(orderService.getOrder(id, authentication.getName(), hasRole(authentication, "ROLE_ADMIN")));
     }
 
     private boolean hasRole(Authentication authentication, String role) {

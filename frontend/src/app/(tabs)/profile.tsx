@@ -1,14 +1,15 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform, StyleSheet, View } from 'react-native';
-import { SymbolView } from 'expo-symbols';
 
 import { ThemedText } from '@/components/themed-text';
+import { Avatar } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
+import { ListRow } from '@/components/ui/list-row';
 import { Screen } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
 import { AI_ASSISTANT_COLOR } from '@/constants/modules';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -29,7 +30,7 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const [signingOut, setSigningOut] = useState(false);
 
-  const initial = (user?.name ?? user?.username ?? '?').charAt(0).toUpperCase();
+  const displayName = user?.name ?? user?.username ?? 'User';
   const roles = displayRoles(user?.roles ?? []);
 
   const confirmSignOut = () => {
@@ -51,75 +52,80 @@ export default function ProfileScreen() {
 
   return (
     <Screen tabInset>
-      <View style={styles.identity}>
-        <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-          <ThemedText style={styles.avatarText}>{initial}</ThemedText>
-        </View>
-        <ThemedText type="subtitle">{user?.name ?? user?.username}</ThemedText>
-        {user?.email && (
-          <ThemedText type="small" themeColor="textSecondary">
-            {user.email}
+      <Card style={styles.identityCard} elevated>
+        <Avatar label={displayName} size={72} />
+        <View style={styles.identityText}>
+          <ThemedText type="headline" style={styles.centered}>
+            {displayName}
           </ThemedText>
-        )}
+          {user?.email && (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.centered}>
+              {user.email}
+            </ThemedText>
+          )}
+          {user?.username && (
+            <ThemedText type="caption" themeColor="textTertiary" style={styles.centered}>
+              @{user.username}
+            </ThemedText>
+          )}
+        </View>
         {roles.length > 0 && (
           <View style={styles.roleRow}>
             {roles.map((role) => (
-              <View key={role} style={[styles.rolePill, { backgroundColor: theme.backgroundSelected }]}>
-                <ThemedText type="small">{role}</ThemedText>
+              <View key={role} style={[styles.rolePill, { backgroundColor: theme.primaryMuted }]}>
+                <ThemedText type="caption" style={{ color: theme.primary }}>
+                  {role}
+                </ThemedText>
               </View>
             ))}
           </View>
         )}
-      </View>
+      </Card>
 
-      <SectionHeader title="More" />
-      <View style={styles.linkColumn}>
-        <Card onPress={() => router.push('/notifications')} style={styles.linkRow}>
-          <View style={styles.linkRowInner}>
-            <SymbolView name={{ ios: 'bell.fill', android: 'notifications', web: 'notifications' }} tintColor={theme.text} size={18} />
-            <ThemedText>Notifications</ThemedText>
-          </View>
-          <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} tintColor={theme.textSecondary} size={16} />
-        </Card>
-        <Card onPress={() => router.push('/ai-assistant')} style={styles.linkRow}>
-          <View style={styles.linkRowInner}>
-            <SymbolView name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }} tintColor={AI_ASSISTANT_COLOR} size={18} />
-            <ThemedText>Ask the Nexora Assistant</ThemedText>
-          </View>
-          <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} tintColor={theme.textSecondary} size={16} />
-        </Card>
-        <Card onPress={() => router.push('/marketplace/orders')} style={styles.linkRow}>
-          <View style={styles.linkRowInner}>
-            <SymbolView name={{ ios: 'bag.fill', android: 'shopping_bag', web: 'shopping_bag' }} tintColor={theme.text} size={18} />
-            <ThemedText>My marketplace orders</ThemedText>
-          </View>
-          <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} tintColor={theme.textSecondary} size={16} />
-        </Card>
-      </View>
-
-      <View style={styles.signOutWrap}>
-        <Card onPress={signingOut ? undefined : confirmSignOut} style={styles.signOutCard}>
-          <SymbolView
-            name={{ ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' }}
-            tintColor={theme.danger}
-            size={18}
+      <View>
+        <SectionHeader title="Account" />
+        <View style={styles.linkList}>
+          <ListRow
+            label="Notifications"
+            subtitle="Alerts and order updates"
+            icon={{ ios: 'bell.fill', android: 'notifications', web: 'notifications' }}
+            onPress={() => router.push('/notifications')}
           />
-          <ThemedText style={{ color: theme.danger }}>{signingOut ? 'Signing out…' : 'Sign out'}</ThemedText>
-        </Card>
+          <ListRow
+            label="Nexora Assistant"
+            subtitle="Campus help and recommendations"
+            icon={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }}
+            iconColor={AI_ASSISTANT_COLOR}
+            iconBackground={AI_ASSISTANT_COLOR + '18'}
+            onPress={() => router.push('/assistant' as Href)}
+          />
+          <ListRow
+            label="Marketplace auctions"
+            subtitle="Bids you won and items you sold"
+            icon={{ ios: 'bag.fill', android: 'shopping_bag', web: 'shopping_bag' }}
+            onPress={() => router.push('/marketplace/orders')}
+          />
+        </View>
       </View>
+
+      <ListRow
+        label={signingOut ? 'Signing out…' : 'Sign out'}
+        icon={{ ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' }}
+        destructive
+        showChevron={false}
+        onPress={() => {
+          if (!signingOut) confirmSignOut();
+        }}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  identity: { alignItems: 'center', gap: Spacing.one, paddingVertical: Spacing.three },
-  avatar: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.two },
-  avatarText: { color: '#ffffff', fontSize: 28, fontWeight: '700' },
-  roleRow: { flexDirection: 'row', gap: Spacing.one, flexWrap: 'wrap', justifyContent: 'center', marginTop: Spacing.one },
-  rolePill: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.half, borderRadius: Spacing.five },
-  linkColumn: { gap: Spacing.two },
-  linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Spacing.two },
-  linkRowInner: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  signOutWrap: { marginTop: Spacing.two },
-  signOutCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, justifyContent: 'center' },
+  identityCard: { alignItems: 'center', gap: Spacing.three, paddingVertical: Spacing.five },
+  identityText: { alignItems: 'center', gap: Spacing.half },
+  centered: { textAlign: 'center' },
+  roleRow: { flexDirection: 'row', gap: Spacing.two, flexWrap: 'wrap', justifyContent: 'center' },
+  rolePill: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.one, borderRadius: Radius.full },
+  linkList: { gap: Spacing.two },
 });

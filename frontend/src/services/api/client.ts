@@ -3,10 +3,12 @@ import { Platform, DeviceEventEmitter } from 'react-native';
 import { getAccessToken, clearTokens } from '@/services/keycloak/token';
 import { refreshAccessToken } from '@/services/keycloak/auth';
 
-// The API gateway (Spring Cloud Gateway) fronts every microservice on a single
-// origin. Replace this with your computer's local IP when testing on a
-// physical device (same caveat as services/keycloak/config.ts).
 function getGatewayBaseUrl() {
+  const configured = process.env.EXPO_PUBLIC_GATEWAY_URL;
+  if (configured) {
+    return configured.replace(/\/$/, '');
+  }
+
   const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
   return `http://${host}:8080`;
 }
@@ -39,6 +41,8 @@ type RequestOptions = {
   query?: Record<string, string | number | boolean | undefined | null>;
   /** Set to false for endpoints that don't require a bearer token. Defaults to true. */
   auth?: boolean;
+  /** When true, body is FormData and Content-Type is left unset (browser sets boundary). */
+  multipart?: boolean;
 };
 
 function buildUrl(path: string, query?: RequestOptions['query']) {
@@ -70,14 +74,19 @@ async function performRequest<T>(path: string, options: RequestOptions, accessTo
   if (options.auth !== false && accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
-  if (options.body !== undefined) {
+  if (options.body !== undefined && !options.multipart) {
     headers['Content-Type'] = 'application/json';
   }
 
   const response = await fetch(buildUrl(path, options.query), {
     method,
     headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    body:
+      options.body === undefined
+        ? undefined
+        : options.multipart
+          ? (options.body as FormData)
+          : JSON.stringify(options.body),
   });
 
   if (response.status === 401) {
@@ -136,6 +145,8 @@ export const api = {
   patch: <T>(path: string, body?: unknown, query?: RequestOptions['query']) =>
     apiRequest<T>(path, { method: 'PATCH', body, query }),
   delete: <T>(path: string, query?: RequestOptions['query']) => apiRequest<T>(path, { method: 'DELETE', query }),
+  upload: <T>(path: string, formData: FormData) =>
+    apiRequest<T>(path, { method: 'POST', body: formData, multipart: true }),
 };
 
 export interface SpringPage<T> {

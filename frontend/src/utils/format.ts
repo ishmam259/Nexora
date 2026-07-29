@@ -2,6 +2,16 @@ export function formatMoney(amount: number, currency = 'BDT') {
   return `${currency} ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/** Short badge form for tight UI (e.g. home wallet chip). */
+export function formatMoneyCompact(amount: number, currency = 'BDT') {
+  const value = amount.toLocaleString('en-US', {
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+  if (currency === 'BDT') return `৳${value}`;
+  return `${currency} ${value}`;
+}
+
 export function formatDateTime(iso: string) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;

@@ -6,12 +6,13 @@ import com.nexora.marketplace.dto.ProductRequestDto;
 import com.nexora.marketplace.dto.ProductResponseDto;
 import com.nexora.marketplace.entity.*;
 import com.nexora.marketplace.repository.CategoryRepository;
+import com.nexora.marketplace.repository.CommentRepository;
 import com.nexora.marketplace.repository.ProductRepository;
-import com.nexora.marketplace.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +22,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final ReviewRepository reviewRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional(readOnly = true)
     public List<ProductResponseDto> getAllActiveProducts() {
@@ -53,10 +54,10 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ProductResponseDto getProductById(Long id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + id));
+        Product product = requireProduct(id);
+        product = refreshEndedStatus(product);
         return mapToResponseDto(product);
     }
 
@@ -76,11 +77,20 @@ public class ProductService {
             throw new ResourceNotFoundException("Category not found with ID: " + request.getCategoryId());
         }
 
+        int hours = request.getDurationHours() != null && request.getDurationHours() > 0
+                ? Math.min(request.getDurationHours(), 24 * 30)
+                : 72;
+
         Product product = Product.builder()
                 .title(request.getTitle().trim())
                 .description(request.getDescription())
-                .price(request.getPrice())
-                .stock(request.getStock() != null ? request.getStock() : 1)
+                .startingBid(request.getStartingBid())
+                .price(request.getStartingBid())
+                .stock(1)
+                .currentBid(null)
+                .currentBidderId(null)
+                .bidCount(0)
+                .endsAt(LocalDateTime.now().plusHours(hours))
                 .condition(request.getCondition() != null ? request.getCondition() : ProductCondition.GOOD)
                 .imageUrl(request.getImageUrl())
                 .categoryId(request.getCategoryId())
@@ -88,18 +98,20 @@ public class ProductService {
                 .status(ProductStatus.ACTIVE)
                 .build();
 
-        Product saved = productRepository.save(product);
-        return mapToResponseDto(saved);
+        return mapToResponseDto(productRepository.save(product));
     }
 
     @Transactional
     public ProductResponseDto updateProduct(Long id, ProductRequestDto request, String requesterId) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + id));
-
-        // Only the owner can update
+        Product product = requireProduct(id);
         if (!product.getSellerId().equals(requesterId)) {
-            throw new NexoraException("You are not authorized to update this product");
+            throw new NexoraException("You are not authorized to update this listing");
+        }
+        if (product.getBidCount() != null && product.getBidCount() > 0) {
+            throw new NexoraException("Cannot edit a listing after bids have been placed");
+        }
+        if (product.getStatus() != ProductStatus.ACTIVE) {
+            throw new NexoraException("Only active listings can be edited");
         }
 
         if (request.getTitle() != null && !request.getTitle().isBlank()) {
@@ -108,11 +120,11 @@ public class ProductService {
         if (request.getDescription() != null) {
             product.setDescription(request.getDescription());
         }
-        if (request.getPrice() != null) {
-            product.setPrice(request.getPrice());
-        }
-        if (request.getStock() != null) {
-            product.setStock(request.getStock());
+        if (request.getStartingBid() != null) {
+            if (request.getStartingBid().signum() <= 0) {
+                throw new NexoraException("Starting bid must be greater than zero");
+            }
+            product.setStartingBid(request.getStartingBid());
         }
         if (request.getCondition() != null) {
             product.setCondition(request.getCondition());
@@ -126,31 +138,47 @@ public class ProductService {
             }
             product.setCategoryId(request.getCategoryId());
         }
+        if (request.getDurationHours() != null && request.getDurationHours() > 0) {
+            product.setEndsAt(LocalDateTime.now().plusHours(Math.min(request.getDurationHours(), 24 * 30)));
+        }
 
-        Product saved = productRepository.save(product);
-        return mapToResponseDto(saved);
+        return mapToResponseDto(productRepository.save(product));
     }
 
     @Transactional
     public void deleteProduct(Long id, String requesterId, boolean isAdmin) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + id));
-
-        // Admins can always remove; owners can remove their own
+        Product product = requireProduct(id);
         if (!isAdmin && !product.getSellerId().equals(requesterId)) {
-            throw new NexoraException("You are not authorized to remove this product");
+            throw new NexoraException("You are not authorized to remove this listing");
         }
-
         product.setStatus(ProductStatus.REMOVED);
         productRepository.save(product);
     }
 
+    Product requireProduct(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Listing not found with ID: " + id));
+    }
+
+    /**
+     * Lazily marks auctions ENDED when their end time has passed.
+     */
+    Product refreshEndedStatus(Product product) {
+        if (product.getStatus() == ProductStatus.ACTIVE
+                && product.getEndsAt() != null
+                && !LocalDateTime.now().isBefore(product.getEndsAt())) {
+            product.setStatus(ProductStatus.ENDED);
+            return productRepository.save(product);
+        }
+        return product;
+    }
+
     private void validateProductRequest(ProductRequestDto request) {
         if (request.getTitle() == null || request.getTitle().isBlank()) {
-            throw new NexoraException("Product title cannot be empty");
+            throw new NexoraException("Listing title cannot be empty");
         }
-        if (request.getPrice() == null || request.getPrice().signum() <= 0) {
-            throw new NexoraException("Product price must be greater than zero");
+        if (request.getStartingBid() == null || request.getStartingBid().signum() <= 0) {
+            throw new NexoraException("Starting bid must be greater than zero");
         }
         if (request.getCategoryId() == null) {
             throw new NexoraException("Category ID must be specified");
@@ -158,35 +186,29 @@ public class ProductService {
     }
 
     ProductResponseDto mapToResponseDto(Product product) {
-        // Resolve category name
         String categoryName = categoryRepository.findById(product.getCategoryId())
                 .map(Category::getName)
                 .orElse("Unknown");
-
-        // Compute review stats
-        List<com.nexora.marketplace.entity.Review> reviews =
-                reviewRepository.findByProductIdOrderByCreatedAtDesc(product.getId());
-        double avgRating = reviews.stream()
-                .mapToInt(com.nexora.marketplace.entity.Review::getRating)
-                .average()
-                .orElse(0.0);
 
         return ProductResponseDto.builder()
                 .id(product.getId())
                 .title(product.getTitle())
                 .description(product.getDescription())
-                .price(product.getPrice())
-                .stock(product.getStock())
+                .startingBid(product.getStartingBid())
+                .currentBid(product.getCurrentBid())
+                .currentBidderId(product.getCurrentBidderId())
+                .bidCount(product.getBidCount() != null ? product.getBidCount() : 0)
+                .endsAt(product.getEndsAt())
+                .biddingOpen(product.isBiddingOpen())
                 .condition(product.getCondition())
                 .imageUrl(product.getImageUrl())
                 .categoryId(product.getCategoryId())
                 .categoryName(categoryName)
                 .sellerId(product.getSellerId())
                 .status(product.getStatus())
+                .commentCount(commentRepository.countByProductId(product.getId()))
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
-                .averageRating(Math.round(avgRating * 10.0) / 10.0)
-                .reviewCount((long) reviews.size())
                 .build();
     }
 }

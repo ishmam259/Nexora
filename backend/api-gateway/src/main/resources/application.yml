@@ -2,14 +2,17 @@ spring:
   application:
     name: api-gateway
 
+  codec:
+    # Allow marketplace photo uploads through the gateway
+    max-in-memory-size: 10MB
+
   # ── Security / OAuth2 ─────────────────────────────────────────────────────
   security:
     oauth2:
       resourceserver:
         jwt:
-          # Keycloak issuer URI (port 8081 per docker-compose.yml)
-          issuer-uri: http://localhost:8081/realms/nexora
-          jwk-set-uri: http://localhost:8081/realms/nexora/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/nexora}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/nexora/protocol/openid-connect/certs}
 
   # ── Cloud Gateway ─────────────────────────────────────────────────────────
   cloud:
@@ -28,6 +31,21 @@ spring:
       httpclient:
         connect-timeout: 5000   # 5 s to establish connection to downstream
         response-timeout: 30s   # 30 s to receive complete response
+
+# ── Downstream service URIs (override in Docker via NEXORA_SERVICE_*_URI) ─────
+nexora:
+  gateway:
+    services:
+      marketplace: ${NEXORA_SERVICE_MARKETPLACE_URI:http://localhost:8082}
+      payment: ${NEXORA_SERVICE_PAYMENT_URI:http://localhost:8083}
+      notification: ${NEXORA_SERVICE_NOTIFICATION_URI:http://localhost:8084}
+      ai: ${NEXORA_SERVICE_AI_URI:http://localhost:8085}
+      food: ${NEXORA_SERVICE_FOOD_URI:http://localhost:8086}
+      laundry: ${NEXORA_SERVICE_LAUNDRY_URI:http://localhost:8087}
+      print: ${NEXORA_SERVICE_PRINT_URI:http://localhost:8088}
+      medical: ${NEXORA_SERVICE_MEDICAL_URI:http://localhost:8089}
+      chat: ${NEXORA_SERVICE_CHAT_URI:http://localhost:8090}
+      lost-found: ${NEXORA_SERVICE_LOST_FOUND_URI:http://localhost:8091}
 
 # ── Server ────────────────────────────────────────────────────────────────────
 server:

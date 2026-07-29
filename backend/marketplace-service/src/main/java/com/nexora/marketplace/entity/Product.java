@@ -27,11 +27,35 @@ public class Product {
     @Column(length = 2000)
     private String description;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    /** Minimum opening bid for the auction. */
+    @Column(name = "starting_bid", nullable = false, precision = 10, scale = 2)
+    private BigDecimal startingBid;
+
+    /**
+     * Legacy buy-now column kept temporarily: existing DBs still have
+     * {@code price NOT NULL}. Hibernate {@code ddl-auto=update} never drops it,
+     * so we mirror {@link #startingBid} into this column on write.
+     */
+    @Column(name = "price", precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(nullable = false)
+    /** Legacy buy-now stock column; auctions are always quantity 1. */
+    @Column(name = "stock")
     private Integer stock;
+
+    /** Highest accepted bid amount so far (null if none). */
+    @Column(name = "current_bid", precision = 10, scale = 2)
+    private BigDecimal currentBid;
+
+    @Column(name = "current_bidder_id")
+    private String currentBidderId;
+
+    @Column(name = "bid_count", nullable = false)
+    @Builder.Default
+    private Integer bidCount = 0;
+
+    @Column(name = "ends_at", nullable = false)
+    private LocalDateTime endsAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -43,7 +67,6 @@ public class Product {
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
 
-    // Keycloak user ID of the student/merchant who listed the product
     @Column(name = "seller_id", nullable = false)
     private String sellerId;
 
@@ -62,11 +85,27 @@ public class Product {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (status == null) status = ProductStatus.ACTIVE;
-        if (stock == null) stock = 1;
+        if (bidCount == null) bidCount = 0;
+        syncLegacyColumns();
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        syncLegacyColumns();
+    }
+
+    /** Keep obsolete price/stock columns populated for DBs that still enforce them. */
+    private void syncLegacyColumns() {
+        if (startingBid != null) {
+            price = startingBid;
+        }
+        if (stock == null) {
+            stock = 1;
+        }
+    }
+
+    public boolean isBiddingOpen() {
+        return status == ProductStatus.ACTIVE && endsAt != null && LocalDateTime.now().isBefore(endsAt);
     }
 }

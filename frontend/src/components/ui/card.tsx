@@ -2,35 +2,49 @@ import { ReactNode } from 'react';
 import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { useElevation } from '@/utils/elevation';
 
 type CardProps = {
   children: ReactNode;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
+  elevated?: boolean;
 };
 
-export function Card({ children, onPress, style }: CardProps) {
+export function Card({ children, onPress, style, accessibilityLabel, elevated = true }: CardProps) {
+  const theme = useTheme();
+  const elevation = useElevation(elevated ? 'sm' : 'none');
+
+  const cardStyle = [
+    styles.card,
+    { backgroundColor: theme.backgroundElement },
+    elevation,
+    style,
+  ];
+
   if (onPress) {
     return (
-      <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}>
-        <ThemedView type="backgroundElement" style={[styles.card, style]}>
-          {children}
-        </ThemedView>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}
+      >
+        <ThemedView style={cardStyle}>{children}</ThemedView>
       </Pressable>
     );
   }
-  return (
-    <ThemedView type="backgroundElement" style={[styles.card, style]}>
-      {children}
-    </ThemedView>
-  );
+
+  return <ThemedView style={cardStyle}>{children}</ThemedView>;
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: Spacing.three,
+    borderRadius: Radius.lg,
     padding: Spacing.three,
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
 });

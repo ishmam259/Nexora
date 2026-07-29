@@ -1,0 +1,251 @@
+include:
+  - path: docker-compose.yml
+
+# Shared environment blocks for backend microservices
+x-keycloak-env: &keycloak-env
+  KEYCLOAK_ISSUER_URI: http://localhost:8081/realms/nexora
+  KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/nexora/protocol/openid-connect/certs
+
+x-postgres-env: &postgres-env
+  SPRING_DATASOURCE_USERNAME: nexora
+  SPRING_DATASOURCE_PASSWORD: nexora_password
+  # 10+ services × default Hikari 10 = can exhaust Postgres max_connections (100)
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
+  SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+
+x-rabbitmq-env: &rabbitmq-env
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USERNAME: guest
+  RABBITMQ_PASSWORD: guest
+
+x-backend-depends: &backend-depends
+  postgres:
+    condition: service_healthy
+  keycloak:
+    condition: service_started
+
+services:
+  # ── Keycloak hostname overrides for browser + container JWT validation ───────
+  keycloak:
+    environment:
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8081
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: edge
+
+  # ── Business microservices ─────────────────────────────────────────────────
+  marketplace-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: marketplace-service
+    container_name: marketplace-service
+    environment:
+      <<: [*postgres-env, *keycloak-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/marketplace_db
+      NEXORA_MARKETPLACE_UPLOAD_DIR: /var/nexora/marketplace-uploads
+    volumes:
+      - marketplace_uploads:/var/nexora/marketplace-uploads
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: payment-service
+    container_name: payment-service
+    environment:
+      <<: [*postgres-env, *keycloak-env, *rabbitmq-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payment_db
+    depends_on:
+      <<: *backend-depends
+      rabbitmq:
+        condition: service_started
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: notification-service
+    container_name: notification-service
+    environment:
+      <<: [*postgres-env, *keycloak-env, *rabbitmq-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+    depends_on:
+      <<: *backend-depends
+      rabbitmq:
+        condition: service_started
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: ai-service
+    container_name: ai-service
+    environment:
+      <<: [*postgres-env, *keycloak-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_db
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  food-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: food-service
+    container_name: food-service
+    environment:
+      <<: [*postgres-env, *keycloak-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/food_db
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  laundry-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: laundry-service
+    container_name: laundry-service
+    environment:
+      <<: [*postgres-env, *keycloak-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/laundry_db
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  print-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: print-service
+    container_name: print-service
+    environment:
+      <<: [*postgres-env, *keycloak-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/printing_db
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  medical-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: medical-service
+    container_name: medical-service
+    environment:
+      <<: [*postgres-env, *keycloak-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medical_db
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  chat-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: chat-service
+    container_name: chat-service
+    environment:
+      <<: [*postgres-env, *keycloak-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/chat_db
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  lost-found-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: lost-found-service
+    container_name: lost-found-service
+    environment:
+      <<: [*postgres-env, *keycloak-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lost_found_db
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  # ── API Gateway ─────────────────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *keycloak-env
+      SPRING_PROFILES_ACTIVE: dev
+      NEXORA_SERVICE_MARKETPLACE_URI: http://marketplace-service:8082
+      NEXORA_SERVICE_PAYMENT_URI: http://payment-service:8083
+      NEXORA_SERVICE_NOTIFICATION_URI: http://notification-service:8084
+      NEXORA_SERVICE_AI_URI: http://ai-service:8085
+      NEXORA_SERVICE_FOOD_URI: http://food-service:8086
+      NEXORA_SERVICE_LAUNDRY_URI: http://laundry-service:8087
+      NEXORA_SERVICE_PRINT_URI: http://print-service:8088
+      NEXORA_SERVICE_MEDICAL_URI: http://medical-service:8089
+      NEXORA_SERVICE_CHAT_URI: http://chat-service:8090
+      NEXORA_SERVICE_LOST_FOUND_URI: http://lost-found-service:8091
+    depends_on:
+      marketplace-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      ai-service:
+        condition: service_started
+      food-service:
+        condition: service_started
+      laundry-service:
+        condition: service_started
+      print-service:
+        condition: service_started
+      medical-service:
+        condition: service_started
+      chat-service:
+        condition: service_started
+      lost-found-service:
+        condition: service_started
+      keycloak:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+    restart: unless-stopped
+
+  # ── Frontend (static Expo web export served by nginx) ────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_GATEWAY_URL: http://localhost:8080
+        EXPO_PUBLIC_KEYCLOAK_URL: http://localhost:8081
+    container_name: nexora-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  marketplace_uploads:

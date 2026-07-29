@@ -84,3 +84,57 @@ $$\text{common-library} \rightarrow \text{keycloak} \rightarrow \text{payment-se
 3.  **`payment-service`** / **`notification-service`** / **`ai-service`** (Utility layer)
 4.  **`marketplace-service`** / **`food-service`** / **`laundry-service`** / **`print-service`** / **`medical-service`** / **`chat-service`** / **`lost-found-service`** (Business layer)
 5.  **`api-gateway`** (Edge router)
+
+---
+
+## 4. Running with Docker
+
+### Infrastructure only (local dev)
+
+Starts Postgres, Keycloak, and RabbitMQ. Run microservices and the frontend on the host with Maven and npm.
+
+```bash
+docker compose up -d
+```
+
+### Full stack (everything containerized)
+
+Builds and runs all 11 microservices, the API gateway, and the frontend web app.
+
+```bash
+docker compose -f docker-compose.full.yml up --build -d
+```
+
+| Service | URL |
+|---|---|
+| Frontend (web) | http://localhost:3000 |
+| API Gateway | http://localhost:8080 |
+| Keycloak | http://localhost:8081 |
+| RabbitMQ UI | http://localhost:15672 (guest/guest) |
+
+Optional: copy `.env.example` to `.env` and set `GROQ_API_KEY` for AI features.
+
+Stop the full stack:
+
+```bash
+docker compose -f docker-compose.full.yml down
+```
+
+### Environment variables
+
+Backend services read these (defaults preserve local-dev behaviour):
+
+| Variable | Purpose |
+|---|---|
+| `SPRING_DATASOURCE_URL` | PostgreSQL JDBC URL |
+| `KEYCLOAK_ISSUER_URI` | JWT issuer (browser-facing, e.g. `http://localhost:8081/realms/nexora`) |
+| `KEYCLOAK_JWK_SET_URI` | JWKS endpoint (Docker-internal: `http://keycloak:8080/...`) |
+| `NEXORA_SERVICE_*_URI` | Gateway downstream service URLs |
+| `RABBITMQ_HOST` | RabbitMQ hostname |
+
+Frontend build args (baked in at image build time):
+
+| Variable | Default |
+|---|---|
+| `EXPO_PUBLIC_GATEWAY_URL` | `http://localhost:8080` |
+| `EXPO_PUBLIC_KEYCLOAK_URL` | `http://localhost:8081` |

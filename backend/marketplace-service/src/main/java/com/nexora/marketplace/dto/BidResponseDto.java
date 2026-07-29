@@ -5,14 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderRequestDto {
+public class BidResponseDto {
+    private Long id;
     private Long productId;
-    private Integer quantity;
-    private String buyerNote;
-    // Optional reference to payment-service transaction
-    private String paymentReference;
+    private String bidderId;
+    private BigDecimal amount;
+    private LocalDateTime createdAt;
 }
