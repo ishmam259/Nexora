@@ -18,13 +18,10 @@ jobs:
           paths:
             - frontend/node_modules
       - run:
-          name: Install EAS CLI
-          command: npm install -g eas-cli
-      - run:
           name: Build Android APK via EAS
           command: |
             cd frontend
-            eas build --platform android --profile preview --non-interactive --json > eas-build-output.json
+            npx eas-cli build --platform android --profile preview --non-interactive --json > eas-build-output.json
             cat eas-build-output.json
       - run:
           name: Download APK artifact
