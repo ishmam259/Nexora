@@ -3,8 +3,9 @@ version: 2.1
 jobs:
   build-android-apk:
     docker:
-      - image: cimg/node:20.11
+      - image: cimg/android:2024.01-node
     working_directory: ~/project
+    resource_class: large
     steps:
       - checkout
       - restore_cache:
@@ -18,20 +19,23 @@ jobs:
           paths:
             - frontend/node_modules
       - run:
-          name: Build Android APK via EAS
-          command: |
-            cd frontend
-            npx eas-cli build --platform android --profile preview --non-interactive --json > eas-build-output.json
-            cat eas-build-output.json
+          name: Generate native Android project
+          command: cd frontend && npx expo prebuild --platform android --no-install
+      - restore_cache:
+          keys:
+            - gradle-caches-{{ checksum "frontend/android/build.gradle" }}
+            - gradle-caches-
       - run:
-          name: Download APK artifact
-          command: |
-            cd frontend
-            APK_URL=$(node -e "console.log(JSON.parse(require('fs').readFileSync('eas-build-output.json','utf8'))[0].artifacts.buildUrl)")
-            curl -L -o nexora.apk "$APK_URL"
+          name: Build debug APK
+          command: cd frontend/android && ./gradlew assembleDebug --no-daemon
+      - save_cache:
+          key: gradle-caches-{{ checksum "frontend/android/build.gradle" }}
+          paths:
+            - ~/.gradle/caches
+            - ~/.gradle/wrapper
       - store_artifacts:
-          path: frontend/nexora.apk
-          destination: nexora.apk
+          path: frontend/android/app/build/outputs/apk/debug
+          destination: apk
 
 workflows:
   version: 2
