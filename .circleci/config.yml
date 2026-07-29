@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: cimg/android:2024.01-node
     working_directory: ~/project
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - restore_cache:
@@ -28,9 +28,10 @@ jobs:
           name: Tune Gradle/Kotlin memory for CI container
           command: |
             {
-              echo 'org.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=1g'
-              echo 'org.gradle.workers.max=4'
-              echo 'kotlin.daemon.jvm.options=-Xmx4g'
+              echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m'
+              echo 'org.gradle.workers.max=2'
+              echo 'org.gradle.parallel=false'
+              echo 'kotlin.daemon.jvm.options=-Xmx2g'
             } >> frontend/android/gradle.properties
       - restore_cache:
           keys:
