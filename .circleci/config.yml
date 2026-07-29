@@ -19,6 +19,9 @@ jobs:
           paths:
             - frontend/node_modules
       - run:
+          name: Install Ninja (required for CMake native builds)
+          command: sudo apt-get update && sudo apt-get install -y ninja-build
+      - run:
           name: Generate native Android project
           command: cd frontend && npx expo prebuild --platform android --no-install
       - restore_cache:
