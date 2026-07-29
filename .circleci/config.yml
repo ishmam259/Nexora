@@ -1,0 +1,47 @@
+version: 2.1
+
+jobs:
+  build-android-apk:
+    docker:
+      - image: cimg/node:20.11
+    working_directory: ~/project
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - npm-deps-{{ checksum "frontend/package-lock.json" }}
+      - run:
+          name: Install dependencies
+          command: cd frontend && npm ci
+      - save_cache:
+          key: npm-deps-{{ checksum "frontend/package-lock.json" }}
+          paths:
+            - frontend/node_modules
+      - run:
+          name: Install EAS CLI
+          command: npm install -g eas-cli
+      - run:
+          name: Build Android APK via EAS
+          command: |
+            cd frontend
+            eas build --platform android --profile preview --non-interactive --json > eas-build-output.json
+            cat eas-build-output.json
+      - run:
+          name: Download APK artifact
+          command: |
+            cd frontend
+            APK_URL=$(node -e "console.log(JSON.parse(require('fs').readFileSync('eas-build-output.json','utf8'))[0].artifacts.buildUrl)")
+            curl -L -o nexora.apk "$APK_URL"
+      - store_artifacts:
+          path: frontend/nexora.apk
+          destination: nexora.apk
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build-android-apk:
+          filters:
+            branches:
+              only:
+                - main
