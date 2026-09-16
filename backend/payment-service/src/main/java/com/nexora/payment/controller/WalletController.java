@@ -12,8 +12,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -35,8 +34,8 @@ public class WalletController {
      */
     @GetMapping("/me")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN', 'RESTAURANT_OWNER', 'DELIVERY_AGENT')")
-    public ResponseEntity<WalletResponseDto> getMyWallet(@AuthenticationPrincipal Jwt jwt) {
-        String userId = jwt.getSubject();
+    public ResponseEntity<WalletResponseDto> getMyWallet(Authentication authentication) {
+        String userId = authentication.getName();
         return ResponseEntity.ok(walletService.getOrCreateWallet(userId));
     }
 
@@ -61,9 +60,9 @@ public class WalletController {
     @PostMapping("/topup")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN', 'RESTAURANT_OWNER', 'DELIVERY_AGENT')")
     public ResponseEntity<WalletTransactionResponseDto> topUp(
-            @AuthenticationPrincipal Jwt jwt,
+            Authentication authentication,
             @Valid @RequestBody WalletTopUpRequestDto request) {
-        String userId = jwt.getSubject();
+        String userId = authentication.getName();
         WalletTransactionResponseDto response = walletService.topUp(userId, request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -75,9 +74,9 @@ public class WalletController {
     @GetMapping("/me/transactions")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN', 'RESTAURANT_OWNER', 'DELIVERY_AGENT')")
     public ResponseEntity<Page<WalletTransactionResponseDto>> getMyTransactions(
-            @AuthenticationPrincipal Jwt jwt,
+            Authentication authentication,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
-        String userId = jwt.getSubject();
+        String userId = authentication.getName();
         return ResponseEntity.ok(walletService.getTransactionHistory(userId, pageable));
     }
 }

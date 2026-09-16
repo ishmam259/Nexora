@@ -11,8 +11,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,9 +45,9 @@ public class PaymentController {
     @PostMapping("/charge")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN', 'RESTAURANT_OWNER', 'DELIVERY_AGENT')")
     public ResponseEntity<PaymentResponseDto> charge(
-            @AuthenticationPrincipal Jwt jwt,
+            Authentication authentication,
             @Valid @RequestBody PaymentRequestDto request) {
-        String payerId = jwt.getSubject();
+        String payerId = authentication.getName();
         PaymentResponseDto response = paymentService.processPayment(request, payerId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -79,8 +78,8 @@ public class PaymentController {
      */
     @GetMapping("/my")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN', 'RESTAURANT_OWNER', 'DELIVERY_AGENT')")
-    public ResponseEntity<List<PaymentResponseDto>> getMyPayments(@AuthenticationPrincipal Jwt jwt) {
-        String payerId = jwt.getSubject();
+    public ResponseEntity<List<PaymentResponseDto>> getMyPayments(Authentication authentication) {
+        String payerId = authentication.getName();
         return ResponseEntity.ok(paymentService.getPaymentsByPayer(payerId));
     }
 
@@ -91,9 +90,9 @@ public class PaymentController {
     @GetMapping("/my/paged")
     @PreAuthorize("hasAnyRole('STUDENT', 'MERCHANT', 'ADMIN', 'RESTAURANT_OWNER', 'DELIVERY_AGENT')")
     public ResponseEntity<Page<PaymentResponseDto>> getMyPaymentsPaged(
-            @AuthenticationPrincipal Jwt jwt,
+            Authentication authentication,
             @PageableDefault(size = 20) Pageable pageable) {
-        String payerId = jwt.getSubject();
+        String payerId = authentication.getName();
         return ResponseEntity.ok(paymentService.getPaymentsByPayerPaged(payerId, pageable));
     }
 

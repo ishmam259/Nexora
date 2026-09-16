@@ -159,9 +159,12 @@ services:
         SERVICE_MODULE: chat-service
     container_name: chat-service
     environment:
-      <<: [*postgres-env, *keycloak-env]
+      <<: [*postgres-env, *keycloak-env, *rabbitmq-env]
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/chat_db
-    depends_on: *backend-depends
+    depends_on:
+      <<: *backend-depends
+      rabbitmq:
+        condition: service_started
     restart: unless-stopped
 
   lost-found-service:
