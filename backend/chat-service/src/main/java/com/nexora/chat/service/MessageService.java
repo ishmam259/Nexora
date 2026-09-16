@@ -6,6 +6,7 @@ import com.nexora.chat.entity.Conversation;
 import com.nexora.chat.entity.Message;
 import com.nexora.chat.repository.ConversationRepository;
 import com.nexora.chat.repository.MessageRepository;
+import com.nexora.chat.publisher.NotificationPublisher;
 import com.nexora.common.exception.NexoraException;
 import com.nexora.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
+    private final NotificationPublisher notificationPublisher;
 
     @Transactional
     public MessageResponseDto sendMessage(Long conversationId, MessageRequestDto request) {
@@ -56,6 +58,15 @@ public class MessageService {
         // Update conversation's updatedAt timestamp
         conversation.setUpdatedAt(now);
         conversationRepository.save(conversation);
+
+        String recipient = conversation.getParticipantOne().equals(request.getSenderId())
+                ? conversation.getParticipantTwo()
+                : conversation.getParticipantOne();
+        notificationPublisher.sendNotification(
+                recipient,
+                "New message from " + request.getSenderId(),
+                request.getContent()
+        );
 
         return mapToResponseDto(saved);
     }
