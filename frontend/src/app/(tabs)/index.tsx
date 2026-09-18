@@ -1,4 +1,5 @@
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
@@ -22,9 +23,22 @@ function greetingForHour(hour: number) {
 export default function HomeScreen() {
   const { user } = useAuth();
   const theme = useTheme();
-  const { data: wallet, loading: walletLoading, error: walletError, refresh: refreshWallet } = useAsync(
-    () => getMyWallet(),
-    []
+  const {
+    data: wallet,
+    loading: walletLoading,
+    refreshing: walletRefreshing,
+    error: walletError,
+    refresh: refreshWallet,
+  } = useAsync(() => getMyWallet(), []);
+
+  // Wallet balance changes whenever the user pays for something on another
+  // screen (print, medical, food, …), so refetch every time this tab regains
+  // focus instead of only once on mount — otherwise the chip shows whatever
+  // balance was current when the app first launched.
+  useFocusEffect(
+    useCallback(() => {
+      refreshWallet();
+    }, [refreshWallet])
   );
 
   const firstName = user?.name?.split(' ')[0] ?? user?.username ?? 'there';
@@ -37,7 +51,7 @@ export default function HomeScreen() {
       : null;
 
   return (
-    <Screen tabInset>
+    <Screen tabInset onRefresh={refreshWallet} refreshing={walletRefreshing}>
       <View style={[StyleSheet.absoluteFill, styles.ambientLayer]} pointerEvents="none">
         <View style={[styles.blob, styles.blobTeal, { backgroundColor: theme.primary + '18' }]} />
         <View style={[styles.blob, styles.blobCoral, { backgroundColor: '#F97316' + '14' }]} />
