@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
 import { ThemedText } from '@/components/themed-text';
@@ -15,6 +15,7 @@ import { Spacing } from '@/constants/theme';
 import { useAsync } from '@/hooks/use-async';
 import { createLaundryOrder, estimateLaundryPrice, getSlots, LAUNDRY_TYPES, SlotResponseDto } from '@/services/api/laundry';
 import { payWithWallet } from '@/services/api/payment';
+import { showAlert } from '@/utils/alert';
 import { formatDateTime, formatMoney } from '@/utils/format';
 
 const ACCENT = MODULES.find((m) => m.key === 'laundry')!.color;
@@ -44,7 +45,7 @@ export default function LaundryScreen() {
     if (!selectedSlot) return;
     const weight = Number(weightKg);
     if (!weight || weight <= 0) {
-      Alert.alert('Enter a weight', 'Tell us roughly how many kilograms of laundry you have.');
+      showAlert('Enter a weight', 'Tell us roughly how many kilograms of laundry you have.');
       return;
     }
     setBooking(true);
@@ -61,10 +62,10 @@ export default function LaundryScreen() {
       if (Platform.OS === 'web') {
         router.push('/laundry/orders');
       } else {
-        Alert.alert('Slot booked', `See you at ${selectedSlot.label}.`, [{ text: 'View orders', onPress: () => router.push('/laundry/orders') }]);
+        showAlert('Slot booked', `See you at ${selectedSlot.label}.`, [{ text: 'View orders', onPress: () => router.push('/laundry/orders') }]);
       }
     } catch (err: any) {
-      Alert.alert('Booking failed', err?.message ?? 'Please try again.');
+      showAlert('Booking failed', err?.message ?? 'Please try again.');
     } finally {
       setBooking(false);
     }
