@@ -16,14 +16,12 @@ const SUCCESS_STATUSES = new Set([
   'PAID',
 ]);
 const DANGER_STATUSES = new Set(['CANCELLED', 'FAILED', 'REMOVED', 'SOLD']);
-const WARNING_STATUSES = new Set(['AWAITING_PAYMENT', 'ENDED', 'PENDING']);
 
 export function StatusBadge({ status }: { status: string }) {
   const theme = useTheme();
 
   const isSuccess = SUCCESS_STATUSES.has(status);
   const isDanger = DANGER_STATUSES.has(status);
-  const isWarning = WARNING_STATUSES.has(status) || (!isSuccess && !isDanger);
   const color = isSuccess ? theme.success : isDanger ? theme.danger : theme.warning;
   const background = isSuccess ? theme.successMuted : isDanger ? theme.dangerMuted : theme.warningMuted;
 

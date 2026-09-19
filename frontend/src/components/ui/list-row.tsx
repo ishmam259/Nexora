@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SymbolView, SymbolViewProps } from 'expo-symbols';
 
 import { ThemedText } from '@/components/themed-text';

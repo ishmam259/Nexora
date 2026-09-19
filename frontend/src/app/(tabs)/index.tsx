@@ -23,8 +23,8 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const theme = useTheme();
   const { data: wallet, loading: walletLoading, error: walletError, refresh: refreshWallet } = useAsync(
-    () => getMyWallet(),
-    []
+    () => (user ? getMyWallet() : Promise.resolve(undefined)),
+    [user]
   );
 
   const firstName = user?.name?.split(' ')[0] ?? user?.username ?? 'there';
