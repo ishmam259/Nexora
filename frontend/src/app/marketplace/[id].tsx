@@ -11,7 +11,6 @@ import { Screen } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { TextField } from '@/components/ui/text-field';
-import { MODULES } from '@/constants/modules';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useAsync } from '@/hooks/use-async';
@@ -25,10 +24,8 @@ import {
   listingPrice,
   placeBid,
 } from '@/services/api/marketplace';
-import { formatDateTime, formatMoney, formatMoneyCompact } from '@/utils/format';
+import { formatDateTime, formatMoney } from '@/utils/format';
 import { resolveMediaUrl } from '@/utils/media';
-
-const ACCENT = MODULES.find((m) => m.key === 'marketplace')!.color;
 
 export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -141,11 +138,11 @@ export default function ListingDetailScreen() {
         <ThemedText type="small" themeColor="textSecondary">
           {product.categoryName} · {product.condition.replace('_', ' ')} · Seller @{product.sellerId}
         </ThemedText>
-        <ThemedText type="title" style={{ color: ACCENT, fontSize: 28 }}>
-          {formatMoneyCompact(displayPrice)}
+        <ThemedText type="title" style={{ fontSize: 28 }}>
+          {formatMoney(displayPrice)}
         </ThemedText>
         <ThemedText type="caption" themeColor="textSecondary">
-          Starting {formatMoneyCompact(product.startingBid)} · {product.bidCount} bid
+          Starting {formatMoney(product.startingBid)} · {product.bidCount} bid
           {product.bidCount === 1 ? '' : 's'} · Ends {formatDateTime(product.endsAt)}
         </ThemedText>
         {product.description ? <ThemedText>{product.description}</ThemedText> : null}
@@ -161,7 +158,7 @@ export default function ListingDetailScreen() {
         <Card>
           <SectionHeader title="Place a bid" />
           <TextField
-            label={`Your bid (min ${formatMoneyCompact(minBid)})`}
+            label={`Your bid (min ${formatMoney(minBid)})`}
             value={bidAmount}
             onChangeText={setBidAmount}
             keyboardType="decimal-pad"
@@ -193,9 +190,7 @@ export default function ListingDetailScreen() {
                 {formatDateTime(bid.createdAt)}
               </ThemedText>
             </View>
-            <ThemedText type="smallBold" style={{ color: ACCENT }}>
-              {formatMoneyCompact(bid.amount)}
-            </ThemedText>
+            <ThemedText type="smallBold">{formatMoney(bid.amount)}</ThemedText>
           </Card>
         ))
       )}

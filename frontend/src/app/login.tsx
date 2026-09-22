@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
@@ -8,26 +9,45 @@ import { MODULES } from '@/constants/modules';
 import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
-import { useElevation } from '@/utils/elevation';
 
 export default function LoginScreen() {
   const { signIn, signingIn } = useAuth();
   const theme = useTheme();
-  const elevation = useElevation('md');
 
   return (
     <Screen scroll={false}>
       <View style={styles.container}>
         <View style={styles.hero}>
-          <View style={[styles.mark, { backgroundColor: theme.primary }, elevation]}>
-            <ThemedText style={styles.markLetter}>N</ThemedText>
+          <View style={[styles.banner, { backgroundColor: theme.tile }]}>
+            <Image
+              source={require('@/assets/images/campus-aerial.jpg')}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              contentPosition={{ top: '38%', left: '38%' }}
+              accessibilityLabel="Aerial view of the IUT campus"
+            />
           </View>
-          <ThemedText type="title" style={styles.wordmark}>
-            Nexora
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.tagline}>
-            Your campus in one app — marketplace, food, laundry, printing, medical, and more.
-          </ThemedText>
+
+          <View style={styles.brandRow}>
+            <View style={[styles.markSmall, { backgroundColor: theme.primary }]}>
+              <ThemedText style={styles.markSmallLetter}>N</ThemedText>
+            </View>
+            <View>
+              <ThemedText type="subtitle">Nexora</ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">
+                Islamic University of Technology
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.copyBlock}>
+            <ThemedText type="headline" style={styles.headline}>
+              Everything on campus, in one app.
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.tagline}>
+              Order food, book laundry and printing, see a doctor and trade with classmates.
+            </ThemedText>
+          </View>
         </View>
 
         <View style={styles.modulePreview}>
@@ -43,9 +63,9 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.footer}>
-          <Button label="Sign in with Nexora ID" onPress={signIn} loading={signingIn} />
+          <Button label="Sign in with IUT account" onPress={signIn} loading={signingIn} />
           <ThemedText type="caption" themeColor="textTertiary" style={styles.footnote}>
-            Secured by your university account via Keycloak.
+            Secure single sign-on managed by the university.
           </ThemedText>
         </View>
       </View>
@@ -57,32 +77,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingVertical: Spacing.seven,
+    paddingVertical: Spacing.six,
   },
   hero: {
+    gap: Spacing.four,
+    marginTop: Spacing.four,
+  },
+  banner: {
+    height: 200,
+    borderTopLeftRadius: 130,
+    borderTopRightRadius: 130,
+    borderBottomLeftRadius: Radius.xl,
+    borderBottomRightRadius: Radius.xl,
+    overflow: 'hidden',
+  },
+  brandRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    marginTop: Spacing.seven,
   },
-  mark: {
-    width: 72,
-    height: 72,
-    borderRadius: Radius.xl,
+  markSmall: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.two,
   },
-  markLetter: {
+  markSmallLetter: {
     color: '#FFFFFF',
-    fontSize: 32,
+    fontSize: 17,
     fontWeight: '800',
   },
-  wordmark: {
-    textAlign: 'center',
+  copyBlock: {
+    gap: Spacing.two,
+  },
+  headline: {
+    letterSpacing: -0.3,
   },
   tagline: {
-    textAlign: 'center',
-    maxWidth: 300,
     lineHeight: 22,
   },
   modulePreview: {

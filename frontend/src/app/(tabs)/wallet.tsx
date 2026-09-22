@@ -57,24 +57,40 @@ export default function WalletScreen() {
             <View style={styles.header}>
               <ScreenHeader title="Wallet" subtitle="Pay across campus services" />
 
-              <View style={[styles.balanceCard, { backgroundColor: theme.primary }, elevation]}>
-                <ThemedText type="caption" style={styles.balanceLabel}>
-                  Available balance
+              <View style={[styles.balanceCard, { backgroundColor: theme.heroBg }, elevation]}>
+                <ThemedText type="caption" style={[styles.balanceLabel, { color: theme.heroMuted }]}>
+                  Current balance
                 </ThemedText>
-                <ThemedText type="title" style={styles.balanceAmount}>
+                <ThemedText type="title" style={[styles.balanceAmount, { color: theme.heroText }]}>
                   {wallet ? formatMoney(wallet.balance, wallet.currency) : '···'}
                 </ThemedText>
-                <Pressable
-                  onPress={() => setTopUpOpen(true)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Top up wallet"
-                  style={({ pressed }) => [styles.topUpButton, { opacity: pressed ? 0.9 : 1 }]}
-                >
-                  <SymbolView name={{ ios: 'plus', android: 'add', web: 'add' }} tintColor={theme.primary} size={16} />
-                  <ThemedText type="smallBold" style={{ color: theme.primary }}>
-                    Top up
-                  </ThemedText>
-                </Pressable>
+                <View style={styles.heroActions}>
+                  <Pressable
+                    onPress={() => setTopUpOpen(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Top up wallet"
+                    style={({ pressed }) => [styles.topUpButton, { opacity: pressed ? 0.9 : 1 }]}
+                  >
+                    <SymbolView name={{ ios: 'plus', android: 'add', web: 'add' }} tintColor={theme.heroBg} size={16} />
+                    <ThemedText type="smallBold" style={{ color: theme.heroBg }}>
+                      Top up
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => router.push('/payments')}
+                    accessibilityRole="button"
+                    accessibilityLabel="View statements"
+                    style={({ pressed }) => [
+                      styles.statementsButton,
+                      { borderColor: theme.heroMuted, opacity: pressed ? 0.85 : 1 },
+                    ]}
+                  >
+                    <SymbolView name={{ ios: 'doc.text', android: 'receipt_long', web: 'receipt_long' }} tintColor={theme.heroText} size={16} />
+                    <ThemedText type="smallBold" style={{ color: theme.heroText }}>
+                      Statements
+                    </ThemedText>
+                  </Pressable>
+                </View>
               </View>
 
               <SectionHeader title="Recent activity" actionLabel="All payments" onAction={() => router.push('/payments')} />
@@ -224,17 +240,35 @@ const styles = StyleSheet.create({
   list: { padding: Spacing.four, gap: Spacing.two, flexGrow: 1 },
   header: { gap: Spacing.four, marginBottom: Spacing.two },
   balanceCard: { borderRadius: Radius.xl, padding: Spacing.four, gap: Spacing.two, alignItems: 'flex-start' },
-  balanceLabel: { color: 'rgba(255,255,255,0.8)' },
-  balanceAmount: { color: '#FFFFFF' },
+  balanceLabel: {},
+  balanceAmount: {},
+  heroActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+    width: '100%',
+  },
   topUpButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.one,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Radius.full,
-    marginTop: Spacing.two,
+    borderRadius: Radius.md,
+  },
+  statementsButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Radius.md,
   },
   txRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   txIcon: { width: 40, height: 40, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },

@@ -10,7 +10,7 @@ import { EmptyState, ErrorState, LoadingView } from '@/components/ui/feedback-st
 import { listContainerStyle, listContentStyle } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { MODULES } from '@/constants/modules';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useAsync } from '@/hooks/use-async';
 import { useTheme } from '@/hooks/use-theme';
 import { getRestaurants } from '@/services/api/food';
@@ -35,7 +35,12 @@ export default function FoodScreen() {
         }}
       />
       <View style={[listContainerStyle, styles.searchWrap]}>
-        <TextField value={search} onChangeText={setSearch} placeholder="Search restaurants…" />
+        <TextField
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search restaurants…"
+          icon={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+        />
       </View>
 
       {loading ? (
@@ -59,19 +64,26 @@ export default function FoodScreen() {
           }
           renderItem={({ item }) => (
             <Pressable onPress={() => router.push(`/food/${item.id}`)}>
-              <Card style={styles.card}>
-                <View style={[styles.imageWrap, { backgroundColor: theme.backgroundSelected }]}>
+              <Card style={styles.card} elevated={false}>
+                <View style={[styles.imageWrap, { backgroundColor: theme.tile }]}>
                   {item.imageUrl ? (
                     <Image source={{ uri: item.imageUrl }} style={styles.image} contentFit="cover" />
                   ) : (
-                    <SymbolView name={{ ios: 'fork.knife', android: 'restaurant', web: 'restaurant' }} tintColor={theme.textSecondary} size={24} />
+                    <SymbolView name={{ ios: 'fork.knife', android: 'restaurant', web: 'restaurant' }} tintColor={theme.textTertiary} size={28} />
                   )}
                 </View>
-                <View style={{ flex: 1 }}>
-                  <ThemedText type="smallBold">{item.name}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
-                    {item.description || item.address}
-                  </ThemedText>
+                <View style={styles.cardBody}>
+                  <View style={{ flex: 1 }}>
+                    <ThemedText type="smallBold">{item.name}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+                      {item.description || item.address}
+                    </ThemedText>
+                  </View>
+                  <View style={[styles.openTag, { backgroundColor: theme.successMuted }]}>
+                    <ThemedText type="caption" style={{ color: theme.success, fontWeight: '600' }}>
+                      Open
+                    </ThemedText>
+                  </View>
                 </View>
               </Card>
             </Pressable>
@@ -83,8 +95,24 @@ export default function FoodScreen() {
 }
 
 const styles = StyleSheet.create({
-  searchWrap: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, paddingBottom: Spacing.one },
-  card: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  imageWrap: { width: 56, height: 56, borderRadius: Spacing.two, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  searchWrap: { alignItems: 'center', paddingHorizontal: Spacing.four, paddingTop: Spacing.two, gap: Spacing.two },
+  card: { padding: 0, gap: 0, overflow: 'hidden' },
+  imageWrap: {
+    height: 128,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   image: { width: '100%', height: '100%' },
+  cardBody: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+    padding: Spacing.three,
+  },
+  openTag: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
+    borderRadius: Radius.sm,
+  },
 });

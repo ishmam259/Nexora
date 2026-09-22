@@ -1,26 +1,26 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { SymbolView, SymbolViewProps } from 'expo-symbols';
 
 import { ThemedText } from '@/components/themed-text';
+import { MODULE_ILLUSTRATIONS } from '@/components/ui/module-illustrations';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 /**
- * Modern springboard tile — soft glowing icon plate, label below, no card chrome.
- * 3-column grid for larger, more tappable targets.
+ * Springboard tile — the module's hand-drawn illustration on an organic
+ * "blob" plate (rounded top, tighter bottom corners), label below.
+ * Matches the Nexora Campus OS module tiles exactly.
  */
 export function SpringboardIcon({
   label,
-  icon,
-  color,
+  moduleKey,
   onPress,
 }: {
   label: string;
-  icon: SymbolViewProps['name'];
-  color: string;
+  moduleKey: string;
   onPress: () => void;
 }) {
   const theme = useTheme();
+  const Illustration = MODULE_ILLUSTRATIONS[moduleKey];
 
   return (
     <Pressable
@@ -31,26 +31,16 @@ export function SpringboardIcon({
         styles.tile,
         {
           opacity: pressed ? 0.85 : 1,
-          transform: [{ scale: pressed ? 0.94 : 1 }],
+          transform: [{ scale: pressed ? 0.96 : 1 }],
         },
       ]}
     >
-      <View
-        style={[
-          styles.glow,
-          {
-            backgroundColor: color + '22',
-            shadowColor: color,
-          },
-        ]}
-      >
-        <View style={[styles.iconPlate, { backgroundColor: color }]}>
-          <SymbolView name={icon} tintColor="#FFFFFF" size={26} />
-        </View>
+      <View style={[styles.plate, { backgroundColor: theme.tile }]}>
+        {Illustration && <Illustration size={56} />}
+        <ThemedText type="caption" style={[styles.label, { color: theme.text }]} numberOfLines={2}>
+          {label}
+        </ThemedText>
       </View>
-      <ThemedText type="caption" style={[styles.label, { color: theme.text }]} numberOfLines={2}>
-        {label}
-      </ThemedText>
     </Pressable>
   );
 }
@@ -58,29 +48,25 @@ export function SpringboardIcon({
 const styles = StyleSheet.create({
   tile: {
     width: '33.333%',
-    alignItems: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.one,
+    paddingVertical: Spacing.one,
   },
-  glow: {
-    borderRadius: 22,
-    padding: 3,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  iconPlate: {
-    width: 62,
-    height: 62,
-    borderRadius: 18,
+  plate: {
     alignItems: 'center',
     justifyContent: 'center',
+    gap: Spacing.two,
+    paddingTop: Spacing.three,
+    paddingBottom: Spacing.two,
+    paddingHorizontal: Spacing.one,
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   label: {
     textAlign: 'center',
     fontWeight: '600',
-    maxWidth: 88,
+    maxWidth: 96,
     fontSize: 12,
     lineHeight: 16,
   },

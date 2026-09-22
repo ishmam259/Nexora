@@ -1,52 +1,115 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
 import { ThemedText } from '@/components/themed-text';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState, ErrorState, LoadingView } from '@/components/ui/feedback-states';
-import { listContainerStyle, listContentStyle } from '@/components/ui/screen';
+import { OptionCard } from '@/components/ui/option-card';
+import { Screen, listContainerStyle, listContentStyle } from '@/components/ui/screen';
+import { SectionHeader } from '@/components/ui/section-header';
+import { Segmented } from '@/components/ui/segmented';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { TextField } from '@/components/ui/text-field';
 import { MODULES } from '@/constants/modules';
 import { Spacing } from '@/constants/theme';
 import { useAsync } from '@/hooks/use-async';
-import { useTheme } from '@/hooks/use-theme';
-import { getMedicines } from '@/services/api/medical';
-import { formatMoney } from '@/utils/format';
+import { estimateAppointmentFee, getMedicines, getMyAppointments, MEDICAL_DEPARTMENTS } from '@/services/api/medical';
+import { formatDateTime, formatMoney } from '@/utils/format';
 
 const ACCENT = MODULES.find((m) => m.key === 'medical')!.color;
 
 export default function MedicalScreen() {
-  const theme = useTheme();
+  const [tab, setTab] = useState<'appointments' | 'pharmacy'>('appointments');
+
+  return (
+    <>
+      <Stack.Screen options={{ title: 'Medical' }} />
+      <View style={[listContainerStyle, styles.tabWrap]}>
+        <Segmented
+          options={[
+            { value: 'appointments', label: 'Appointments' },
+            { value: 'pharmacy', label: 'Pharmacy' },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
+      </View>
+      {tab === 'appointments' ? <AppointmentsTab /> : <PharmacyTab />}
+    </>
+  );
+}
+
+function AppointmentsTab() {
+  const theme = { accent: ACCENT };
+  const { data: appointments, loading, error, refresh, refreshing } = useAsync(() => getMyAppointments(), []);
+
+  const upcoming = (appointments ?? [])
+    .filter((a) => a.status === 'PENDING' || a.status === 'CONFIRMED')
+    .sort((a, b) => new Date(a.appointmentTime).getTime() - new Date(b.appointmentTime).getTime())[0];
+
+  return (
+    <Screen onRefresh={refresh} refreshing={refreshing} tabInset={false}>
+      {loading && <LoadingView />}
+      {error && <ErrorState message={error} onRetry={refresh} />}
+
+      {upcoming && (
+        <>
+          <SectionHeader title="Upcoming" />
+          <Card style={{ gap: Spacing.two }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View>
+                <ThemedText type="smallBold">{upcoming.department}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Dr. {upcoming.doctorName} · Medical Centre
+                </ThemedText>
+              </View>
+              <StatusBadge status={upcoming.status} />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.one }}>
+              <SymbolView name={{ ios: 'calendar', android: 'calendar_month', web: 'calendar_month' }} tintColor={theme.accent} size={16} />
+              <ThemedText type="small" style={{ fontWeight: '500' }}>
+                {formatDateTime(upcoming.appointmentTime)}
+              </ThemedText>
+            </View>
+          </Card>
+        </>
+      )}
+
+      <SectionHeader title="Book by department" />
+      <View style={styles.deptGrid}>
+        {MEDICAL_DEPARTMENTS.map((dept) => (
+          <OptionCard
+            key={dept}
+            label={dept}
+            meta={`${formatMoney(estimateAppointmentFee(dept))} fee`}
+            selected={false}
+            onPress={() => router.push('/medical/appointments')}
+          />
+        ))}
+      </View>
+
+      <Button label="Choose a time" onPress={() => router.push('/medical/appointments')} />
+    </Screen>
+  );
+}
+
+function PharmacyTab() {
   const [search, setSearch] = useState('');
   const { data, loading, error, refresh, refreshing } = useAsync(() => getMedicines(search || undefined), [search]);
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: 'Medical',
-          headerRight: () => (
-            <Pressable onPress={() => router.push('/medical/appointments')} hitSlop={8}>
-              <SymbolView name={{ ios: 'calendar', android: 'calendar_month', web: 'calendar_month' }} tintColor={ACCENT} size={20} />
-            </Pressable>
-          ),
-        }}
-      />
-      <View style={[listContainerStyle, { alignSelf: 'center', paddingHorizontal: Spacing.four, paddingTop: Spacing.three }]}>
-        <TextField value={search} onChangeText={setSearch} placeholder="Search medicines…" />
-        <Pressable onPress={() => router.push('/medical/appointments')} style={{ marginTop: Spacing.two }}>
-          <Card style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
-              <SymbolView name={{ ios: 'stethoscope', android: 'stethoscope', web: 'stethoscope' }} tintColor={ACCENT} size={18} />
-              <ThemedText type="smallBold">{"Book a doctor's appointment"}</ThemedText>
-            </View>
-            <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} tintColor={theme.textSecondary} size={16} />
-          </Card>
-        </Pressable>
+      <View style={[listContainerStyle, styles.searchWrap]}>
+        <TextField
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search medicines…"
+          icon={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+        />
       </View>
-
       {loading ? (
         <LoadingView />
       ) : error ? (
@@ -73,9 +136,7 @@ export default function MedicalScreen() {
                   </ThemedText>
                 )}
               </View>
-              <ThemedText type="smallBold" style={{ color: ACCENT }}>
-                {formatMoney(item.price)}
-              </ThemedText>
+              <ThemedText type="smallBold">{formatMoney(item.price)}</ThemedText>
             </Card>
           )}
         />
@@ -83,3 +144,9 @@ export default function MedicalScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  tabWrap: { alignSelf: 'center', paddingHorizontal: Spacing.four, paddingTop: Spacing.three, paddingBottom: Spacing.two },
+  searchWrap: { alignItems: 'center', paddingHorizontal: Spacing.four, paddingBottom: Spacing.two },
+  deptGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+});
